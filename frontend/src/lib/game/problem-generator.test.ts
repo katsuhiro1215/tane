@@ -50,6 +50,34 @@ describe("generateProblem", () => {
   });
 });
 
+describe("generateProblem (実際の乱数を通した検証)", () => {
+  // 上のテストは固定値rngのため、operandAとoperandBが同じ乱数値から
+  // 導出され常に相関してしまい、境界条件が崩れても検出できない
+  // (例: sub Lv.3でoperandB > operandAになる実装バグを混入しても、
+  // 固定rngのテストだけでは通ってしまう)。実際の乱数で多数回検証する。
+  const ITERATIONS = 2000;
+
+  it("ひき算は乱数を通しても答えが負にならない", () => {
+    for (const level of [1, 2, 3]) {
+      for (let i = 0; i < ITERATIONS; i++) {
+        const problem = generateProblem("sub", level);
+        expect(problem.operandA).toBeGreaterThanOrEqual(problem.operandB);
+        expect(problem.answer).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  it("わり算は乱数を通しても割り切れる（余りが出ない）", () => {
+    for (const level of [1, 2, 3]) {
+      for (let i = 0; i < ITERATIONS; i++) {
+        const problem = generateProblem("div", level);
+        expect(problem.operandB).not.toBe(0);
+        expect(problem.operandA % problem.operandB).toBe(0);
+      }
+    }
+  });
+});
+
 describe("generateStageProblems", () => {
   it("指定した問数ぶんの問題を生成する", () => {
     const problems = generateStageProblems("add", 1, 20, () => 0.5);

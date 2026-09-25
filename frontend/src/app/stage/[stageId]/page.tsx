@@ -1,4 +1,4 @@
-import { StagePlayer } from "@/components/stage-player";
+import { StagePlayerLoader } from "@/components/stage-player-loader";
 
 export default async function StagePage({
   params,
@@ -6,5 +6,5 @@ export default async function StagePage({
   params: Promise<{ stageId: string }>;
 }) {
   const { stageId } = await params;
-  return <StagePlayer stageId={stageId} />;
+  return <StagePlayerLoader stageId={stageId} />;
 }

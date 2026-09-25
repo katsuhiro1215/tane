@@ -25,52 +25,55 @@ export function SpruCharacter({
   const config = STAGE_CONFIG[stage];
 
   return (
-    <div
-      className={`animate-character-bounce ${className ?? ""}`}
-      style={{ transform: `scale(${config.scale})` }}
-    >
-      <svg viewBox="0 0 120 150" className="h-full w-full drop-shadow-xl">
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={config.colorFrom} />
-            <stop offset="100%" stopColor={config.colorTo} />
-          </linearGradient>
-        </defs>
+    // 外側でscale、内側でbounceアニメーション(transform: translateY)を
+    // 別々の要素に適用する。同じ要素に両方置くと、キーフレームのtransformが
+    // インラインstyleのscaleを上書きしてしまい、成長による拡大が見た目に
+    // 反映されなくなるため。
+    <div className={className} style={{ transform: `scale(${config.scale})` }}>
+      <div className="animate-character-bounce h-full w-full">
+        <svg viewBox="0 0 120 150" className="h-full w-full drop-shadow-xl">
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={config.colorFrom} />
+              <stop offset="100%" stopColor={config.colorTo} />
+            </linearGradient>
+          </defs>
 
-        <ellipse cx="60" cy="140" rx="30" ry="6" fill="black" opacity="0.15" />
+          <ellipse cx="60" cy="140" rx="30" ry="6" fill="black" opacity="0.15" />
 
-        <path
-          d="M60 42 C48 38 48 26 60 22 C72 18 72 6 60 4"
-          stroke="#15803d"
-          strokeWidth="4"
-          strokeLinecap="round"
-          fill="none"
-        />
+          <path
+            d="M60 42 C48 38 48 26 60 22 C72 18 72 6 60 4"
+            stroke="#15803d"
+            strokeWidth="4"
+            strokeLinecap="round"
+            fill="none"
+          />
 
-        <path
-          d="M60 34 C92 34 106 62 106 92 C106 122 86 138 60 138 C34 138 14 122 14 92 C14 62 28 34 60 34 Z"
-          fill={`url(#${gradientId})`}
-        />
+          <path
+            d="M60 34 C92 34 106 62 106 92 C106 122 86 138 60 138 C34 138 14 122 14 92 C14 62 28 34 60 34 Z"
+            fill={`url(#${gradientId})`}
+          />
 
-        <circle cx="42" cy="90" r="6" fill="#14532d" />
-        <circle cx="78" cy="90" r="6" fill="#14532d" />
-        <circle cx="44" cy="88" r="2" fill="white" />
-        <circle cx="80" cy="88" r="2" fill="white" />
-        <path
-          d="M45 106 Q60 118 75 106"
-          stroke="#14532d"
-          strokeWidth="4"
-          fill="none"
-          strokeLinecap="round"
-        />
+          <circle cx="42" cy="90" r="6" fill="#14532d" />
+          <circle cx="78" cy="90" r="6" fill="#14532d" />
+          <circle cx="44" cy="88" r="2" fill="white" />
+          <circle cx="80" cy="88" r="2" fill="white" />
+          <path
+            d="M45 106 Q60 118 75 106"
+            stroke="#14532d"
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+          />
 
-        {config.hasBloom && (
-          <>
-            <circle cx="30" cy="50" r="8" fill="#f472b6" />
-            <circle cx="90" cy="55" r="7" fill="#f472b6" />
-          </>
-        )}
-      </svg>
+          {config.hasBloom && (
+            <>
+              <circle cx="30" cy="50" r="8" fill="#f472b6" />
+              <circle cx="90" cy="55" r="7" fill="#f472b6" />
+            </>
+          )}
+        </svg>
+      </div>
     </div>
   );
 }

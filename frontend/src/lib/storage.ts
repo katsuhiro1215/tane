@@ -37,6 +37,8 @@ export function getClearedStageIds(): string[] {
   return cachedResult;
 }
 
+const CLEARED_STAGES_CHANGED_EVENT = "tane:cleared-stages-changed";
+
 export function markStageCleared(stageId: string): void {
   if (typeof window === "undefined") {
     return;
@@ -44,11 +46,20 @@ export function markStageCleared(stageId: string): void {
   const cleared = new Set(getClearedStageIds());
   cleared.add(stageId);
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...cleared]));
+  // "storage"イベントは他タブでの変更にしか発火せず、同一タブ内で
+  // markStageClearedを呼んでもuseSyncExternalStoreの購読者に通知されない。
+  // 同一タブでの再読み込みが必要な画面(将来トップに戻らず結果表示だけ
+  // 更新するUI等)のために独自イベントも発行しておく。
+  window.dispatchEvent(new Event(CLEARED_STAGES_CHANGED_EVENT));
 }
 
 function subscribeToStorage(callback: () => void): () => void {
   window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
+  window.addEventListener(CLEARED_STAGES_CHANGED_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(CLEARED_STAGES_CHANGED_EVENT, callback);
+  };
 }
 
 function getServerSnapshot(): string[] {
