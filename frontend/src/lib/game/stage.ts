@@ -1,17 +1,16 @@
 import { applyDamage, INITIAL_HP, isDefeated } from "@/lib/game/hp";
-import type { Problem } from "@/lib/game/problem-generator";
 
 export type StageStatus = "in-progress" | "cleared" | "failed";
 
-export interface StageState {
-  problems: Problem[];
+export interface StageState<T extends { answer: number }> {
+  problems: T[];
   currentIndex: number;
   hp: number;
   correctCount: number;
   status: StageStatus;
 }
 
-export function createStage(problems: Problem[]): StageState {
+export function createStage<T extends { answer: number }>(problems: T[]): StageState<T> {
   if (problems.length === 0) {
     throw new Error("problems must not be empty");
   }
@@ -24,11 +23,14 @@ export function createStage(problems: Problem[]): StageState {
   };
 }
 
-export function currentProblem(state: StageState): Problem {
+export function currentProblem<T extends { answer: number }>(state: StageState<T>): T {
   return state.problems[state.currentIndex];
 }
 
-export function submitAnswer(state: StageState, answer: number): StageState {
+export function submitAnswer<T extends { answer: number }>(
+  state: StageState<T>,
+  answer: number
+): StageState<T> {
   if (state.status !== "in-progress") {
     return state;
   }

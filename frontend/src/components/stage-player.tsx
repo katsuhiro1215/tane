@@ -8,7 +8,7 @@ import { NumericKeypad } from "@/components/numeric-keypad";
 import { growthStageFor, SpruCharacter } from "@/components/spru-character";
 import { getNextStage, getStageById } from "@/data/problems/stages";
 import { INITIAL_HP } from "@/lib/game/hp";
-import type { Operator } from "@/lib/game/problem-generator";
+import type { Operator, Problem } from "@/lib/game/problem-generator";
 import { generateStageProblems } from "@/lib/game/problem-generator";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
 import { markStageCleared } from "@/lib/storage";
@@ -38,7 +38,7 @@ export function StagePlayer({ stageId }: { stageId: string }) {
   // key={stageId}付きでマウントされる(ステージが変わるたびに
   // 新しいインスタンスとして再マウントされる)ため、レンダー中に
   // 一度だけ生成するlazy initializerで安全に問題を確定できる。
-  const [state, setState] = useState<StageState | null>(() => {
+  const [state, setState] = useState<StageState<Problem> | null>(() => {
     if (!stageDefinition) {
       return null;
     }
