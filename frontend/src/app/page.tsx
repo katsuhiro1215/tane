@@ -1,18 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { STAGES } from "@/data/problems/stages";
 import { isStageUnlocked } from "@/lib/game/progress";
-import { getClearedStageIds } from "@/lib/storage";
+import { useClearedStageIds } from "@/lib/storage";
 
 export default function HomePage() {
-  const [clearedIds, setClearedIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    setClearedIds(getClearedStageIds());
-  }, []);
+  const clearedIds = useClearedStageIds();
 
   return (
     <main className="flex flex-1 flex-col gap-4 p-6">
