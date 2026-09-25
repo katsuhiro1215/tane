@@ -62,8 +62,13 @@ function subscribeToStorage(callback: () => void): () => void {
   };
 }
 
+// 呼ばれるたびに新しい配列を返すとuseSyncExternalStoreが
+// 「getServerSnapshot should be cached」と警告する(サーバー/ハイドレーション
+// 判定のために毎回呼ばれるため、同一参照を返す必要がある)。
+const EMPTY_STAGE_IDS: string[] = [];
+
 function getServerSnapshot(): string[] {
-  return [];
+  return EMPTY_STAGE_IDS;
 }
 
 export function useClearedStageIds(): string[] {
