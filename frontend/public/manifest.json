@@ -4,7 +4,7 @@
   "description": "計算のタネをまき、少しずつ育てていく計算学習アプリ",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#16a34a",
   "icons": [

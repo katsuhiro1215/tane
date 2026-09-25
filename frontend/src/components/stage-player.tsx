@@ -139,7 +139,7 @@ export function StagePlayer({ stageId }: { stageId: string }) {
   const problem = currentProblem(state);
 
   return (
-    <div className="flex flex-1 flex-col gap-3 p-3">
+    <div className="flex flex-1 flex-col gap-4 p-4">
       <div className="flex w-full items-center justify-between">
         <HpGauge value={state.hp} max={INITIAL_HP} />
         <span className="text-sm text-muted-foreground">
@@ -147,32 +147,35 @@ export function StagePlayer({ stageId }: { stageId: string }) {
         </span>
       </div>
 
-      <div className="flex flex-1 items-center justify-center gap-6">
+      {/* 問題まわりは残りスペースの中で縦中央に配置し、キーパッドとの間に
+          不自然な空白ができないようにする */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-3">
         <SpruCharacter
           stage={growthStageFor(state.correctCount, state.problems.length)}
           className="h-20 w-20 shrink-0"
         />
 
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-3xl font-bold">
-            {problem.operandA} {operatorSymbol(problem.operator)} {problem.operandB} = ?
-          </p>
+        <p className="text-3xl font-bold">
+          {problem.operandA} {operatorSymbol(problem.operator)} {problem.operandB} = ?
+        </p>
 
-          <p className="h-10 text-4xl font-mono">{inputValue || " "}</p>
+        <p className="h-10 text-4xl font-mono">{inputValue || " "}</p>
 
-          <p
-            className={`h-8 text-xl font-bold ${
-              feedback === "correct"
-                ? "text-emerald-600"
-                : feedback === "incorrect"
-                  ? "text-rose-600"
-                  : "text-transparent"
-            }`}
-          >
-            {feedback === "correct" ? "せいかい！" : feedback === "incorrect" ? "ざんねん" : " "}
-          </p>
-        </div>
+        <p
+          className={`h-8 text-xl font-bold ${
+            feedback === "correct"
+              ? "text-emerald-600"
+              : feedback === "incorrect"
+                ? "text-rose-600"
+                : "text-transparent"
+          }`}
+        >
+          {feedback === "correct" ? "せいかい！" : feedback === "incorrect" ? "ざんねん" : " "}
+        </p>
+      </div>
 
+      {/* キーパッドは画面下部、縦持ちで親指が届く位置に配置する */}
+      <div className="flex w-full justify-center pb-2">
         <NumericKeypad
           value={inputValue}
           onChange={setInputValue}
