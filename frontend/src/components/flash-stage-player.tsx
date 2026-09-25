@@ -1,13 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { HpGauge } from "@/components/hp-gauge";
 import { NumericKeypad } from "@/components/numeric-keypad";
 import { growthStageFor, SpruCharacter } from "@/components/spru-character";
 import { getFlashStageById, getNextFlashStage } from "@/data/problems/flash-stages";
-import { generateFlashStageProblems, type FlashProblem } from "@/lib/game/flash-problem";
+import {
+  generateFlashStageProblems,
+  type FlashLevel,
+  type FlashProblem,
+} from "@/lib/game/flash-problem";
 import { INITIAL_HP } from "@/lib/game/hp";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
 import { markStageCleared } from "@/lib/storage";
@@ -15,7 +19,7 @@ import { useFlashSequence } from "@/lib/use-flash-sequence";
 
 const FEEDBACK_DELAY_MS = 600;
 
-const LEVEL_TIMING: Record<number, { stepMs: number; gapMs: number }> = {
+const LEVEL_TIMING: Record<FlashLevel, { stepMs: number; gapMs: number }> = {
   1: { stepMs: 1200, gapMs: 300 },
   2: { stepMs: 900, gapMs: 250 },
   3: { stepMs: 700, gapMs: 200 },
@@ -52,6 +56,14 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
   const [inputValue, setInputValue] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const timing = stageDefinition ? LEVEL_TIMING[stageDefinition.level] : undefined;
   const problem =

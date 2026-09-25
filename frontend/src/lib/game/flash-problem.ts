@@ -3,7 +3,15 @@ export interface FlashProblem {
   answer: number;
 }
 
-const LEVEL_LENGTH: Record<number, number> = {
+// フラッシュ暗算のレベルの唯一の出所。flash-stages.ts(ステージ定義)と
+// flash-stage-player.tsx(表示速度)はここから型を借りることで、
+// レベルを追加したときにLEVEL_LENGTH/LEVEL_TIMINGの更新を忘れると
+// コンパイルエラーになるようにする(Record<FlashLevel, V>は全キーの
+// 指定を要求するため)。
+export const FLASH_LEVELS = [1, 2, 3] as const;
+export type FlashLevel = (typeof FLASH_LEVELS)[number];
+
+const LEVEL_LENGTH: Record<FlashLevel, number> = {
   1: 3,
   2: 4,
   3: 5,
@@ -17,7 +25,7 @@ export function generateFlashProblem(
   level: number,
   rng: () => number = Math.random
 ): FlashProblem {
-  const length = LEVEL_LENGTH[level];
+  const length = LEVEL_LENGTH[level as FlashLevel];
   if (!length) {
     throw new Error(`Unsupported level for flash: ${level}`);
   }

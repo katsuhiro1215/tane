@@ -1,12 +1,12 @@
+import { FLASH_LEVELS, type FlashLevel } from "@/lib/game/flash-problem";
+
 export interface FlashStageDefinition {
   id: string;
-  level: number;
+  level: FlashLevel;
   title: string;
 }
 
-const LEVELS = [1, 2, 3];
-
-export const FLASH_STAGES: FlashStageDefinition[] = LEVELS.map((level) => ({
+export const FLASH_STAGES: FlashStageDefinition[] = FLASH_LEVELS.map((level) => ({
   id: `flash-${level}`,
   level,
   title: `フラッシュ暗算 Lv.${level}`,
