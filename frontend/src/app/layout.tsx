@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Hachi_Maru_Pop, Zen_Maru_Gothic } from "next/font/google";
 
 import "./globals.css";
 
@@ -12,6 +12,18 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const hachiMaruPop = Hachi_Maru_Pop({
+  variable: "--font-hachi",
+  weight: "400",
+  subsets: ["latin"],
+});
+
+const zenMaruGothic = Zen_Maru_Gothic({
+  variable: "--font-zen-maru",
+  weight: ["400", "500", "700"],
   subsets: ["latin"],
 });
 
@@ -33,7 +45,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${hachiMaruPop.variable} ${zenMaruGothic.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}
