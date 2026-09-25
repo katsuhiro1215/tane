@@ -29,9 +29,9 @@ export default function HomePage() {
   const clearedIds = useClearedStageIds();
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-6 bg-[#FBEFDA] p-6">
+    <main className="flex flex-1 flex-col items-center gap-6 bg-background p-6">
       <h1
-        className="mt-2 text-5xl text-[#2F6B4F]"
+        className="mt-2 text-5xl text-primary"
         style={{ fontFamily: "var(--font-hachi)", ...CHALK_OUTLINE }}
       >
         Tane

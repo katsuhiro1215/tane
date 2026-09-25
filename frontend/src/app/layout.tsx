@@ -1,12 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Hachi_Maru_Pop, Zen_Maru_Gothic } from "next/font/google";
+import { Geist_Mono, Hachi_Maru_Pop, Zen_Maru_Gothic } from "next/font/google";
 
 import "./globals.css";
 
 import { PwaRegister } from "@/components/pwa-register";
 
-const geistSans = Geist({
+// Zen Maru Gothicをアプリ全体の基本フォント(--font-sans)として採用する。
+// 「ひよこ暗算」を参考にした温かみのあるテーマ(company/tane/assets/sample.png)
+// をトップ画面だけでなくアプリ全体に展開する方針のため。
+const zenMaruGothic = Zen_Maru_Gothic({
   variable: "--font-sans",
+  weight: ["400", "500", "700"],
   subsets: ["latin"],
 });
 
@@ -21,12 +25,6 @@ const hachiMaruPop = Hachi_Maru_Pop({
   subsets: ["latin"],
 });
 
-const zenMaruGothic = Zen_Maru_Gothic({
-  variable: "--font-zen-maru",
-  weight: ["400", "500", "700"],
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   title: "Tane",
   description: "計算のタネをまき、少しずつ育てていく計算学習アプリ",
@@ -34,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#16a34a",
+  themeColor: "#2f6b4f",
 };
 
 export default function RootLayout({
@@ -45,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} ${hachiMaruPop.variable} ${zenMaruGothic.variable} h-full antialiased`}
+      className={`${zenMaruGothic.variable} ${geistMono.variable} ${hachiMaruPop.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}

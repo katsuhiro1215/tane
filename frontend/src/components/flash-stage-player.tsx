@@ -76,12 +76,12 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
 
   if (!stageDefinition || !state) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-        <p>ステージが見つかりません</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-background p-6">
+        <p className="text-foreground">ステージが見つかりません</p>
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="rounded-full bg-primary px-6 py-3 text-primary-foreground"
+          className="rounded-full border-b-4 border-[#C98A1B] bg-accent px-6 py-3 font-bold text-accent-foreground transition active:translate-y-[2px] active:border-b-2"
         >
           ステージ一覧に戻る
         </button>
@@ -112,22 +112,22 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
   if (state.status !== "in-progress") {
     const nextStage = getNextFlashStage(stageId);
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-background p-6">
         <SpruCharacter
           stage={growthStageFor(state.correctCount, state.problems.length)}
           className="h-40 w-40"
         />
-        <p className="text-2xl font-bold">
+        <p className="text-2xl font-bold text-foreground">
           {state.status === "cleared" ? "ステージクリア！" : "また挑戦しよう！"}
         </p>
-        <p>
+        <p className="text-foreground">
           {state.correctCount} / {state.problems.length} 問正解
         </p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="rounded-full bg-secondary px-6 py-3 text-secondary-foreground"
+            className="rounded-full border-b-4 border-border bg-secondary px-6 py-3 font-bold text-secondary-foreground transition active:translate-y-[2px] active:border-b-2"
           >
             ステージ一覧に戻る
           </button>
@@ -135,7 +135,7 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
             <button
               type="button"
               onClick={() => router.push(`/flash/${nextStage.id}`)}
-              className="rounded-full bg-primary px-6 py-3 text-primary-foreground"
+              className="rounded-full border-b-4 border-[#C98A1B] bg-accent px-6 py-3 font-bold text-accent-foreground transition active:translate-y-[2px] active:border-b-2"
             >
               次のステージへ
             </button>
@@ -146,43 +146,45 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
+    <div className="flex flex-1 flex-col gap-4 bg-background p-4">
       <div className="flex w-full items-center justify-between">
         <HpGauge value={state.hp} max={INITIAL_HP} />
-        <span className="text-sm text-muted-foreground">
+        <span className="rounded-full border border-border bg-card px-3 py-1 text-sm font-bold text-foreground">
           {state.currentIndex + 1} / {state.problems.length}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-3">
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-[28px] border-[6px] border-[#6B4226] bg-primary p-4">
         <SpruCharacter
           stage={growthStageFor(state.correctCount, state.problems.length)}
           className="h-20 w-20 shrink-0"
         />
 
         {flash.phase === "flashing" ? (
-          <p className="flex h-16 items-center text-5xl font-bold">
+          <p className="flex h-16 items-center text-5xl font-bold text-primary-foreground">
             {flash.currentNumber !== null
               ? formatFlashNumber(flash.currentNumber, flash.index)
-              : " "}
+              : " "}
           </p>
         ) : (
           <>
-            <p className="text-2xl font-bold">合計は？</p>
-            <p className="h-10 text-4xl font-mono">{inputValue || " "}</p>
+            <p className="text-2xl font-bold text-primary-foreground">合計は？</p>
+            <p className="h-10 text-4xl font-mono text-primary-foreground">
+              {inputValue || " "}
+            </p>
           </>
         )}
 
         <p
           className={`h-8 text-xl font-bold ${
             feedback === "correct"
-              ? "text-emerald-600"
+              ? "text-emerald-300"
               : feedback === "incorrect"
-                ? "text-rose-600"
+                ? "text-rose-300"
                 : "text-transparent"
           }`}
         >
-          {feedback === "correct" ? "せいかい！" : feedback === "incorrect" ? "ざんねん" : " "}
+          {feedback === "correct" ? "せいかい！" : feedback === "incorrect" ? "ざんねん" : " "}
         </p>
       </div>
 

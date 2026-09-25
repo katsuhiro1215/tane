@@ -59,12 +59,12 @@ export function StagePlayer({ stageId }: { stageId: string }) {
 
   if (!stageDefinition) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
-        <p>ステージが見つかりません</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-background p-6">
+        <p className="text-foreground">ステージが見つかりません</p>
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="rounded-full bg-primary px-6 py-3 text-primary-foreground"
+          className="rounded-full border-b-4 border-[#C98A1B] bg-accent px-6 py-3 font-bold text-accent-foreground transition active:translate-y-[2px] active:border-b-2"
         >
           ステージ一覧に戻る
         </button>
@@ -74,7 +74,7 @@ export function StagePlayer({ stageId }: { stageId: string }) {
 
   if (!state) {
     return (
-      <div className="flex flex-1 items-center justify-center p-6">
+      <div className="flex flex-1 items-center justify-center bg-background p-6">
         <p className="text-muted-foreground">よみこみちゅう...</p>
       </div>
     );
@@ -103,22 +103,22 @@ export function StagePlayer({ stageId }: { stageId: string }) {
   if (state.status !== "in-progress") {
     const nextStage = getNextStage(stageId);
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-background p-6">
         <SpruCharacter
           stage={growthStageFor(state.correctCount, state.problems.length)}
           className="h-40 w-40"
         />
-        <p className="text-2xl font-bold">
+        <p className="text-2xl font-bold text-foreground">
           {state.status === "cleared" ? "ステージクリア！" : "また挑戦しよう！"}
         </p>
-        <p>
+        <p className="text-foreground">
           {state.correctCount} / {state.problems.length} 問正解
         </p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="rounded-full bg-secondary px-6 py-3 text-secondary-foreground"
+            className="rounded-full border-b-4 border-border bg-secondary px-6 py-3 font-bold text-secondary-foreground transition active:translate-y-[2px] active:border-b-2"
           >
             ステージ一覧に戻る
           </button>
@@ -126,7 +126,7 @@ export function StagePlayer({ stageId }: { stageId: string }) {
             <button
               type="button"
               onClick={() => router.push(`/stage/${nextStage.id}`)}
-              className="rounded-full bg-primary px-6 py-3 text-primary-foreground"
+              className="rounded-full border-b-4 border-[#C98A1B] bg-accent px-6 py-3 font-bold text-accent-foreground transition active:translate-y-[2px] active:border-b-2"
             >
               次のステージへ
             </button>
@@ -139,34 +139,34 @@ export function StagePlayer({ stageId }: { stageId: string }) {
   const problem = currentProblem(state);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
+    <div className="flex flex-1 flex-col gap-4 bg-background p-4">
       <div className="flex w-full items-center justify-between">
         <HpGauge value={state.hp} max={INITIAL_HP} />
-        <span className="text-sm text-muted-foreground">
+        <span className="rounded-full border border-border bg-card px-3 py-1 text-sm font-bold text-foreground">
           {state.currentIndex + 1} / {state.problems.length}
         </span>
       </div>
 
-      {/* 問題まわりは残りスペースの中で縦中央に配置し、キーパッドとの間に
-          不自然な空白ができないようにする */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-3">
+      {/* チョークボード風パネル。問題まわりは残りスペースの中で縦中央に
+          配置し、キーパッドとの間に不自然な空白ができないようにする */}
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-[28px] border-[6px] border-[#6B4226] bg-primary p-4">
         <SpruCharacter
           stage={growthStageFor(state.correctCount, state.problems.length)}
           className="h-20 w-20 shrink-0"
         />
 
-        <p className="text-3xl font-bold">
+        <p className="text-3xl font-bold text-primary-foreground">
           {problem.operandA} {operatorSymbol(problem.operator)} {problem.operandB} = ?
         </p>
 
-        <p className="h-10 text-4xl font-mono">{inputValue || " "}</p>
+        <p className="h-10 text-4xl font-mono text-primary-foreground">{inputValue || " "}</p>
 
         <p
           className={`h-8 text-xl font-bold ${
             feedback === "correct"
-              ? "text-emerald-600"
+              ? "text-emerald-300"
               : feedback === "incorrect"
-                ? "text-rose-600"
+                ? "text-rose-300"
                 : "text-transparent"
           }`}
         >

@@ -37,7 +37,7 @@ export function NumericKeypad({ value, onChange, onSubmit, disabled }: NumericKe
           type="button"
           onClick={() => handleKeyPress(key)}
           disabled={disabled || (key === "OK" && !canSubmit(value))}
-          className="h-14 rounded-xl bg-secondary text-xl font-bold text-secondary-foreground transition active:scale-95 disabled:opacity-40"
+          className="h-14 rounded-2xl border-b-4 border-border bg-secondary text-xl font-bold text-secondary-foreground transition active:translate-y-[2px] active:border-b-[2px] disabled:translate-y-0 disabled:border-b-4 disabled:opacity-40"
         >
           {key}
         </button>
