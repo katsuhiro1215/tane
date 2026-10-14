@@ -32,8 +32,16 @@ export function TimeBar({ targetMs, getElapsedMs }: { targetMs: number; getElaps
           style={{ width: `${over ? 100 : remainingRatio * 100}%` }}
         />
       </div>
-      <p className={cn("mt-0.5 text-right font-display text-[11px] font-black", over ? "text-muted-foreground" : "text-[#2b6fa3]")}>
-        {over ? "★3は つぎ がんばろう" : `★3まで あと ${remainingSec}びょう`}
+      <p className="mt-0.5 text-right">
+        {/* 紫のフィーバー画面の上でも読めるよう、白い札に載せる */}
+        <span
+          className={cn(
+            "inline-block rounded-full bg-white/80 px-2 font-display text-[11px] font-black",
+            over ? "text-muted-foreground" : "text-[#2b6fa3]"
+          )}
+        >
+          {over ? "★3は つぎ がんばろう" : `★3まで あと ${remainingSec}びょう`}
+        </span>
       </p>
     </div>
   );

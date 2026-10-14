@@ -6,18 +6,25 @@ import { useEffect, useRef, useState } from "react";
 import { Panel } from "@/components/app/panel";
 import { useSound } from "@/components/app/sound-provider";
 import { NumericKeypad } from "@/components/numeric-keypad";
+import { ComboText } from "@/components/play/combo-text";
 import { FeedbackText, poseFor, type Feedback } from "@/components/play/feedback-text";
+import { FeverFriends } from "@/components/play/fever-friends";
+import { FeverBanner, FeverStage } from "@/components/play/fever-stage";
+import { finishStage } from "@/components/play/finish-stage";
 import { PlayHeader } from "@/components/play/play-header";
+import { PointsPopup } from "@/components/play/points-popup";
+import { SpeedHud } from "@/components/play/speed-hud";
 import { StageNotFound } from "@/components/play/stage-not-found";
 import { StageResult, type StageOutcome } from "@/components/play/stage-result";
+import { useSpeedPlay } from "@/components/play/use-speed-play";
 import { getStage, PROBLEMS_PER_STAGE, targetMs, type FlashStage } from "@/data/stages/catalog";
 import { generateFlashStageProblems, type FlashProblem } from "@/lib/game/flash-problem";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
-import { mistakesOf, starsForResult } from "@/lib/game/stars";
 import { modeHref } from "@/lib/mode-params";
-import { recordStageResult, rememberLastMode } from "@/lib/progress-store";
+import { rememberLastMode } from "@/lib/progress-store";
 import { SPRU_POSES } from "@/lib/spru-images";
 import { useFlashSequence } from "@/lib/use-flash-sequence";
+import { cn } from "@/lib/utils";
 
 const FEEDBACK_DELAY_MS = 600;
 
@@ -56,11 +63,13 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
   }, [stage]);
 
   const problem = state && state.status === "in-progress" ? currentProblem(state) : null;
-  const flash = useFlashSequence(
-    problem?.sequence ?? EMPTY_SEQUENCE,
-    stage?.rule.stepMs ?? 0,
-    stage?.rule.gapMs ?? 0
-  );
+  const flash = useFlashSequence(problem?.sequence ?? EMPTY_SEQUENCE, stage?.rule.stepMs ?? 0, stage?.rule.gapMs ?? 0);
+  // 数字が出ている間は時間を数えない（答える時間だけを測る）
+  const speed = useSpeedPlay({
+    secondsPerProblem: stage?.secondsPerProblem ?? 1,
+    answerable: problem !== null && flash.phase === "answering" && feedback === null,
+    questionKey: state?.currentIndex ?? 0,
+  });
 
   if (!stage || !state) return <StageNotFound />;
   const current = stage;
@@ -69,6 +78,8 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
     if (!state || inputValue === "" || feedback !== null || flash.phase !== "answering") return;
     const isCorrect = Number(inputValue) === currentProblem(state).answer;
     const next = submitAnswer(state, Number(inputValue));
+    const remainingAfter = next.status === "in-progress" ? next.problems.length - next.currentIndex : 0;
+    const result = speed.submit(isCorrect, remainingAfter);
     setFeedback(isCorrect ? "correct" : "incorrect");
     play(isCorrect ? "correct" : "incorrect");
     setInputValue("");
@@ -78,20 +89,14 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
       setState(next);
       setFeedback(null);
       if (next.status !== "in-progress") {
-        const stars = starsForResult({
-          status: next.status,
-          mistakes: mistakesOf(next),
-          elapsedMs: 0,
-          targetMs: targetMs(current),
-        });
-        const { improved, before } = recordStageResult(current.id, stars);
-        setOutcome({ stars, improved, before });
+        setOutcome(finishStage(current, next, result.session));
         if (next.status === "cleared") play("allCorrect");
       }
     }, FEEDBACK_DELAY_MS);
   }
 
   function retry() {
+    speed.reset();
     setState(newStage(current));
     setOutcome(null);
     setInputValue("");
@@ -110,16 +115,30 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
     );
   }
 
+  const inFever = speed.session.feverLeft > 0;
+
   return (
-    <main className="flex flex-1 flex-col gap-3 pb-4">
+    <main data-fever={inFever ? "true" : "false"} className="relative isolate flex flex-1 flex-col gap-2 pb-4">
+      <FeverStage active={inFever} />
       <PlayHeader
         backHref={modeHref(current.mode, { stageId: current.id })}
         hp={state.hp}
         index={Math.min(state.currentIndex + 1, state.problems.length)}
         total={state.problems.length}
       />
-      <Panel className="mx-4 flex flex-1 flex-col items-center justify-center gap-2">
-        <Image src={SPRU_POSES[poseFor(feedback)]} alt="" width={80} height={100} className="h-20 w-auto" />
+      <SpeedHud session={speed.session} targetMs={targetMs(current)} getElapsedMs={speed.getElapsedMs} />
+      {inFever && <FeverFriends hopKey={speed.session.answered} />}
+      <Panel
+        className={cn(
+          "relative mx-4 flex flex-1 flex-col items-center justify-center gap-2",
+          feedback === "incorrect" && "animate-shake"
+        )}
+      >
+        <ComboText combo={speed.session.combo} />
+        {/* 正解のたびに跳ねる。key を答えた数にして、毎回動きを最初から始める */}
+        <span key={speed.session.answered} className={feedback === "correct" ? "block animate-spru-hop" : "block"}>
+          <Image src={SPRU_POSES[poseFor(feedback)]} alt="" width={80} height={100} className="h-20 w-auto" />
+        </span>
         {flash.phase === "flashing" ? (
           <p className="flex h-24 items-center font-display text-6xl font-black">
             {flash.currentNumber !== null ? formatFlashNumber(flash.currentNumber, flash.index) : " "}
@@ -133,6 +152,7 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
           </>
         )}
         <FeedbackText feedback={feedback} />
+        <PointsPopup gain={feedback === "correct" ? speed.lastGain : null} />
       </Panel>
       <div className="flex w-full justify-center px-4">
         <NumericKeypad
@@ -142,6 +162,7 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
           disabled={feedback !== null || flash.phase !== "answering"}
         />
       </div>
+      <FeverBanner show={speed.banner} />
     </main>
   );
 }

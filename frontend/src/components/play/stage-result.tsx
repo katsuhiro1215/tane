@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AppButton, appButtonVariants } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { StarsRow } from "@/components/app/stars-row";
+import { useCountUp } from "@/components/play/use-count-up";
 import type { Stage } from "@/data/stages/catalog";
 import type { Stars } from "@/lib/game/stars";
 import { resultLinks } from "@/lib/result-links";
@@ -15,6 +16,11 @@ export interface StageOutcome {
   stars: Stars;
   improved: boolean;
   before: Stars;
+  score: number;
+  newBest: boolean;
+  elapsedMs: number;
+  targetMs: number;
+  missedThreeByMs: number | null;
 }
 
 interface StageResultProps {
@@ -26,8 +32,11 @@ interface StageResultProps {
   onRetry: () => void;
 }
 
+const SCORE_COUNT_MS = 1200;
+
 export function StageResult({ stage, cleared, correctCount, total, outcome, onRetry }: StageResultProps) {
   const links = resultLinks(stage, { cleared, improved: outcome.improved, before: outcome.before });
+  const score = useCountUp(outcome.score, SCORE_COUNT_MS, 0);
   return (
     <main className="flex flex-1 flex-col justify-center gap-4 p-6">
       <Panel className="flex flex-col items-center gap-3 py-6">
@@ -37,13 +46,34 @@ export function StageResult({ stage, cleared, correctCount, total, outcome, onRe
           width={120}
           height={160}
           priority
-          className="h-36 w-auto animate-pop-in"
+          className="h-32 w-auto animate-pop-in"
         />
         <h1 className="font-display text-3xl font-black">{cleared ? "ステージクリア！" : "ざんねん…"}</h1>
         {cleared && <StarsRow stars={outcome.stars} size="lg" animate />}
+        {cleared && (
+          <p className="font-display text-4xl font-black text-cta-to" aria-label={`${outcome.score}てん`}>
+            {score.toLocaleString("ja-JP")}
+            <span className="ml-1 text-lg">PT</span>
+          </p>
+        )}
+        {cleared && outcome.newBest && (
+          <p className="animate-pop-in rounded-full bg-[#ff3d8b] px-3 py-0.5 font-display text-sm font-black text-white">
+            さいこうきろく！
+          </p>
+        )}
         <p className="font-bold">
           {correctCount} / {total} もん せいかい
         </p>
+        {cleared && (
+          <p className="text-sm font-bold text-muted-foreground">
+            かかった じかん {Math.round(outcome.elapsedMs / 1000)}びょう / もくひょう {Math.round(outcome.targetMs / 1000)}びょう
+          </p>
+        )}
+        {outcome.missedThreeByMs !== null && (
+          <p className="font-display text-sm font-black text-[#2b6fa3]">
+            あと {Math.ceil(outcome.missedThreeByMs / 1000)}びょう はやければ ★3！
+          </p>
+        )}
         {cleared && outcome.improved && (
           <p className="font-display text-sm font-black text-primary">タネが そだったよ！ みにいこう</p>
         )}
