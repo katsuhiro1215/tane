@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 import { AppButton, appButtonVariants } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { StarsRow } from "@/components/app/stars-row";
+import { NewFriend } from "@/components/play/new-friend";
 import { useCountUp } from "@/components/play/use-count-up";
 import type { Stage } from "@/data/stages/catalog";
 import type { Stars } from "@/lib/game/stars";
@@ -34,7 +36,18 @@ interface StageResultProps {
 
 const SCORE_COUNT_MS = 1200;
 
-export function StageResult({ stage, cleared, correctCount, total, outcome, onRetry }: StageResultProps) {
+export function StageResult(props: StageResultProps) {
+  // 初めてクリアしたときだけ（★0から★1以上）。もういちどで作り直すと before は1以上なので出ない
+  const [newFriendOpen, setNewFriendOpen] = useState(
+    props.cleared && props.outcome.before === 0 && props.outcome.stars > 0
+  );
+  if (newFriendOpen) {
+    return <NewFriend stage={props.stage} stars={props.outcome.stars} onClose={() => setNewFriendOpen(false)} />;
+  }
+  return <ResultBody {...props} />;
+}
+
+function ResultBody({ stage, cleared, correctCount, total, outcome, onRetry }: StageResultProps) {
   const links = resultLinks(stage, { cleared, improved: outcome.improved, before: outcome.before });
   const score = useCountUp(outcome.score, SCORE_COUNT_MS, 0);
   return (
