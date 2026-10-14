@@ -46,30 +46,47 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --font-display: var(--font-rounded);
+  --color-sky-top: var(--sky-top);
+  --color-sky-mid: var(--sky-mid);
+  --color-meadow: var(--meadow);
+  --color-leaf: var(--leaf);
+  --color-leaf-dark: var(--leaf-dark);
+  --color-cta-from: var(--cta-from);
+  --color-cta-to: var(--cta-to);
+  --color-cta-edge: var(--cta-edge);
+  --color-cream-edge: var(--cream-edge);
 }
 
 :root {
-  /* 「ひよこ暗算」を参考にした温かみのあるテーマ(company/spra/tane/assets/sample.png)。
-     チョークボード(緑)・木枠(茶)・ゴールドアクセントを共通トークンとして
-     アプリ全体に適用する。 */
-  --background: #fbefda;
-  --foreground: #4a3222;
-  --card: #fffbf2;
-  --card-foreground: #4a3222;
-  --popover: #fffbf2;
-  --popover-foreground: #4a3222;
-  --primary: #2f6b4f;
-  --primary-foreground: #fbefda;
-  --secondary: #fffbf2;
-  --secondary-foreground: #4a3222;
-  --muted: #a98f72;
-  --muted-foreground: #6b5a47;
-  --accent: #f5b942;
-  --accent-foreground: #4a3222;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #d8cbb0;
-  --input: #d8cbb0;
-  --ring: #f5b942;
+  /* Spra Goと同じ空の雰囲気（company/spra/tane/docs/2026-10-14-game-foundation-design.md 4.4） */
+  --background: #def4fb;
+  --foreground: #3b3226;
+  --card: #fffaf0;
+  --card-foreground: #3b3226;
+  --popover: #fffaf0;
+  --popover-foreground: #3b3226;
+  --primary: #3b7f26;
+  --primary-foreground: #ffffff;
+  --secondary: #fffaf0;
+  --secondary-foreground: #3b3226;
+  --muted: #efe5cf;
+  --muted-foreground: #8a7a5a;
+  --accent: #f2b632;
+  --accent-foreground: #3b3226;
+  --destructive: #e05a3a;
+  --border: #e8dfcf;
+  --input: #e8dfcf;
+  --ring: #2b6fa3;
+  --sky-top: #bfe7f7;
+  --sky-mid: #def4fb;
+  --meadow: #cdeeb0;
+  --leaf: #5bb33e;
+  --leaf-dark: #285a19;
+  --cta-from: #ffb43d;
+  --cta-to: #f28b1d;
+  --cta-edge: #b8610f;
+  --cream-edge: #e3d3b0;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -125,7 +142,8 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: linear-gradient(var(--sky-top) 0%, var(--sky-mid) 55%, var(--meadow) 100%) fixed;
   }
   html {
     @apply font-sans;
@@ -149,6 +167,73 @@
   @media (prefers-reduced-motion: reduce) {
     .animate-character-bounce {
       animation: none !important;
+    }
+  }
+
+  @keyframes spru-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .animate-spru-bob { animation: spru-bob 2.4s ease-in-out infinite; }
+
+  @keyframes spru-hop {
+    0% { transform: translateY(0); }
+    30% { transform: translateY(-18px); }
+    55% { transform: translateY(0); }
+    75% { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+  }
+  .animate-spru-hop { animation: spru-hop 0.6s ease-out; }
+
+  @keyframes pop-in {
+    0% { transform: scale(0.3); opacity: 0; }
+    60% { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .animate-pop-in { animation: pop-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+  @keyframes grow-out {
+    to { transform: scale(0); opacity: 0; }
+  }
+  .animate-grow-out { animation: grow-out 0.35s ease-in forwards; }
+
+  @keyframes grow-in {
+    0% { transform: scale(0) translateY(8px); opacity: 0; }
+    60% { transform: scale(1.25) translateY(-4px); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .animate-grow-in { animation: grow-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+
+  @keyframes sparkle {
+    0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); opacity: 0; }
+  }
+  .animate-sparkle { animation: sparkle 0.8s ease-out forwards; }
+
+  @keyframes pulse-soft {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .animate-pulse-soft { animation: pulse-soft 1.6s ease-in-out infinite; }
+
+  @keyframes bubble-in {
+    0% { transform: scale(0.6) translateY(6px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .animate-bubble-in { animation: bubble-in 0.25s ease-out both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-spru-bob,
+    .animate-spru-hop,
+    .animate-pop-in,
+    .animate-grow-in,
+    .animate-pulse-soft,
+    .animate-bubble-in {
+      animation: none !important;
+    }
+    .animate-sparkle,
+    .animate-grow-out {
+      display: none;
     }
   }
 }
