@@ -30,7 +30,8 @@ export function useSpeedPlay({ secondsPerProblem, answerable, questionKey }: Opt
 
   // 問題が答えられる状態になるたびに、0から測り始める（演出中・フラッシュの表示中は数えない）
   useEffect(() => {
-    if (answerable) clock.start();
+    // 隠れたタブで問題が始まることもある（演出やフラッシュのタイマーは隠れていても進む）
+    if (answerable) clock.start(document.visibilityState === "hidden");
   }, [answerable, questionKey, clock]);
 
   // 別のタブ・アプリにいる間は数えない

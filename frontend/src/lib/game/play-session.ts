@@ -53,7 +53,8 @@ export function answer(session: PlaySession, input: AnswerInput): AnswerOutcome 
   };
 
   if (inFever) {
-    const feverLeft = session.feverLeft - 1;
+    // ステージが終わったら（失敗も含む）フィーバーも終える。終わらないと結果画面でフィーバーの曲が残る
+    const feverLeft = input.remainingAfter === 0 ? 0 : session.feverLeft - 1;
     const feverEnded = feverLeft === 0;
     return {
       session: { ...common, gauge: feverEnded ? 0 : session.gauge, feverLeft },

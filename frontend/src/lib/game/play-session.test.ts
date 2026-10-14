@@ -65,6 +65,13 @@ describe("ゲージ", () => {
     expect(answer({ ...INITIAL_SESSION, gauge: 90 }, input(true, SLOW, 3)).session.feverLeft).toBe(3);
   });
 
+  it("フィーバー中にステージが終わったら（失敗も含む）、フィーバーも終わる", () => {
+    const outcome = answer({ ...INITIAL_SESSION, gauge: 100, feverLeft: 4 }, input(false, FAST, 0));
+    expect(outcome.feverEnded).toBe(true);
+    expect(outcome.session.feverLeft).toBe(0);
+    expect(outcome.session.gauge).toBe(0);
+  });
+
   it("最後の問題で満タンになってもフィーバーにはならない", () => {
     const outcome = answer({ ...INITIAL_SESSION, gauge: 90 }, input(true, SLOW, 0));
     expect(outcome.feverStarted).toBe(false);

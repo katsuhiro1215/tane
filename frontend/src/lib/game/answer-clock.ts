@@ -1,5 +1,6 @@
 export interface AnswerClock {
-  start(): void;
+  /** hidden: 測り始めるときにページが隠れていれば、表示に戻る（resume）まで数えない */
+  start(hidden?: boolean): void;
   pause(): void;
   resume(): void;
   stop(): number;
@@ -17,10 +18,10 @@ export function createAnswerClock(now: () => number): AnswerClock {
   }
 
   return {
-    start() {
+    start(hidden = false) {
       startedAt = now();
       accumulated = 0;
-      paused = false;
+      paused = hidden;
     },
     pause() {
       if (startedAt === null || paused) return;

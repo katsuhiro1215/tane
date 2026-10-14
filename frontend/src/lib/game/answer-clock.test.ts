@@ -63,4 +63,14 @@ describe("createAnswerClock", () => {
     t = 5300;
     expect(c.stop()).toBe(300);
   });
+
+  it("隠れている間に測り始めたら、表示に戻ってから数え始める", () => {
+    const c = clock();
+    c.start(true);
+    t = 300_000;
+    expect(c.peek()).toBe(0);
+    c.resume();
+    t = 301_200;
+    expect(c.stop()).toBe(1200);
+  });
 });
