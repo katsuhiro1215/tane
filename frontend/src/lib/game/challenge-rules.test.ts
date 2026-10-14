@@ -12,6 +12,7 @@ import {
   medalRank,
   nextMedalGoal,
   nextProblem,
+  resultMedal,
   remainingMs,
   secondsFor,
 } from "@/lib/game/challenge-rules";
@@ -143,6 +144,17 @@ describe("メダル", () => {
     expect(nextMedalGoal("add", 4499)).toEqual({ medal: "gold", pointsLeft: 1 });
     expect(nextMedalGoal("add", 4500)).toBeNull();
     expect(nextMedalGoal("div", 3400)).toEqual({ medal: "gold", pointsLeft: 100 });
+  });
+});
+
+describe("resultMedal", () => {
+  it("結果画面のメダルは最高点で決まり、上がったときだけ upgraded", () => {
+    expect(resultMedal("add", 1600, null)).toEqual({ medal: "bronze", upgraded: true });
+    // 前に金を取っていれば、今回の点が低くても金のまま
+    expect(resultMedal("add", 1600, 4800)).toEqual({ medal: "gold", upgraded: false });
+    expect(resultMedal("add", 3100, 1600)).toEqual({ medal: "silver", upgraded: true });
+    expect(resultMedal("add", 1700, 1600)).toEqual({ medal: "bronze", upgraded: false });
+    expect(resultMedal("add", 900, null)).toEqual({ medal: null, upgraded: false });
   });
 });
 

@@ -7,7 +7,7 @@ import { AppButton, appButtonVariants } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { MEDAL_LABELS, MedalBadge } from "@/components/challenge/medal-badge";
 import { useCountUp } from "@/components/play/use-count-up";
-import { CHALLENGE_LABELS, medalFor, medalRank, nextMedalGoal, type ChallengeModeId } from "@/lib/game/challenge-rules";
+import { CHALLENGE_LABELS, nextMedalGoal, resultMedal, type ChallengeModeId } from "@/lib/game/challenge-rules";
 import { SPRU_POSES } from "@/lib/spru-images";
 
 export interface ChallengeOutcome {
@@ -31,8 +31,7 @@ export function ChallengeResult({
 }) {
   const score = useCountUp(outcome.score, SCORE_COUNT_MS, 0);
   const best = Math.max(outcome.score, outcome.bestBefore ?? 0);
-  const medal = medalFor(modeId, outcome.score);
-  const medalUp = medalRank(medalFor(modeId, best)) > medalRank(medalFor(modeId, outcome.bestBefore));
+  const { medal, upgraded: medalUp } = resultMedal(modeId, outcome.score, outcome.bestBefore);
   const goal = nextMedalGoal(modeId, best);
 
   return (

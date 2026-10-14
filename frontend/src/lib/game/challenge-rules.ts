@@ -85,6 +85,16 @@ export function medalRank(medal: Medal | null): number {
   return medal ? MEDALS.indexOf(medal) + 1 : 0;
 }
 
+/** 結果画面に出すメダル。最高点（今回と前の高いほう）で決め、前より上がったかも返す（設計書2.4） */
+export function resultMedal(
+  mode: ChallengeModeId,
+  score: number,
+  bestBefore: number | null
+): { medal: Medal | null; upgraded: boolean } {
+  const medal = medalFor(mode, Math.max(score, bestBefore ?? 0));
+  return { medal, upgraded: medalRank(medal) > medalRank(medalFor(mode, bestBefore)) };
+}
+
 export function nextMedalGoal(mode: ChallengeModeId, best: number): { medal: Medal; pointsLeft: number } | null {
   const table = MEDAL_SCORES[mode];
   const medal = MEDALS.find((m) => best < table[m]);
