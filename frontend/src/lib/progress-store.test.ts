@@ -10,7 +10,9 @@ import {
   recordStageResult,
   rememberLastMode,
   resetProgress,
+  toggleGarden,
   withChallengeScore,
+  withGardenToggle,
   withResult,
 } from "@/lib/progress-store";
 import { SETTINGS_KEY } from "@/lib/settings-store";
@@ -25,7 +27,7 @@ describe("parseProgress", () => {
 
   it("★は1〜3の整数だけ、知らないステージidは捨てる", () => {
     const raw = JSON.stringify({ stars: { "add-1": 3, "add-2": 0, "add-3": 4, "add-4": "2", "zzz-1": 3, "flash-6": 2 }, titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 3, "flash-6": 2 }, best: {}, challengeBest: {}, titleSeen: true });
+    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 3, "flash-6": 2 }, best: {}, challengeBest: {}, garden: [], titleSeen: true });
   });
 
   it("lastModeId は知っているあそびだけ、titleSeen は true のときだけ", () => {
@@ -33,6 +35,7 @@ describe("parseProgress", () => {
       stars: {},
       best: {},
       challengeBest: {},
+      garden: [],
       lastModeId: "mul",
       titleSeen: false,
     });
@@ -46,7 +49,7 @@ describe("parseProgress", () => {
 
   it("分割1の記録（best が無い）も★を残して読める", () => {
     const raw = JSON.stringify({ stars: { "add-1": 2 }, lastModeId: "add", titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 2 }, best: {}, challengeBest: {}, lastModeId: "add", titleSeen: true });
+    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 2 }, best: {}, challengeBest: {}, garden: [], lastModeId: "add", titleSeen: true });
   });
 
   it("challengeBest は知っているチャレンジのあそびの、0以上の整数だけ", () => {
@@ -55,6 +58,24 @@ describe("parseProgress", () => {
       challengeBest: { add: 3200, mix: 0, flash: 100, div: -1, mul: 1.5, sub: "9" },
     });
     expect(parseProgress(raw).challengeBest).toEqual({ add: 3200, mix: 0 });
+  });
+
+  it("garden は知っているステージidの文字列だけ、重なりを除いて8こまで", () => {
+    const ids = ["add-1", "add-1", "zzz-1", 3, "sub-2", "add-2", "add-3", "add-4", "add-5", "add-6", "add-7", "add-8"];
+    expect(parseProgress(JSON.stringify({ stars: {}, garden: ids })).garden).toEqual([
+      "add-1",
+      "sub-2",
+      "add-2",
+      "add-3",
+      "add-4",
+      "add-5",
+      "add-6",
+      "add-7",
+    ]);
+    expect(parseProgress(JSON.stringify({ stars: { "add-1": 1 }, garden: "add-1" }))).toMatchObject({
+      stars: { "add-1": 1 },
+      garden: [],
+    });
   });
 
   it("challengeBest が無い・形が違う記録は空で、★は残る", () => {
@@ -116,6 +137,23 @@ describe("withChallengeScore", () => {
   it("ほかのあそびの最高点と★には触らない", () => {
     const base = { ...EMPTY_PROGRESS, stars: { "add-1": 3 as const }, challengeBest: { mix: 500 } };
     expect(withChallengeScore(base, "div", 900).progress).toEqual({ ...base, challengeBest: { mix: 500, div: 900 } });
+  });
+});
+
+describe("withGardenToggle", () => {
+  it("入っていなければ足し、入っていれば外す", () => {
+    const added = withGardenToggle(EMPTY_PROGRESS, "add-1");
+    expect(added.result).toBe("added");
+    expect(added.progress.garden).toEqual(["add-1"]);
+    const removed = withGardenToggle(added.progress, "add-1");
+    expect(removed.result).toBe("removed");
+    expect(removed.progress.garden).toEqual([]);
+  });
+
+  it("8体のときに足そうとすると full で、何も変えない（外すことはできる）", () => {
+    const full = { ...EMPTY_PROGRESS, garden: ["add-1", "add-2", "add-3", "add-4", "add-5", "add-6", "add-7", "add-8"] };
+    expect(withGardenToggle(full, "add-9")).toEqual({ progress: full, result: "full" });
+    expect(withGardenToggle(full, "add-3").result).toBe("removed");
   });
 });
 
@@ -184,6 +222,16 @@ describe("localStorage への読み書き", () => {
     recordChallengeResult("mix", 2000);
     resetProgress();
     expect(readProgress().challengeBest).toEqual({});
+  });
+
+  it("toggleGarden は保存し、resetProgress で消える", () => {
+    expect(toggleGarden("add-2")).toBe("added");
+    expect(toggleGarden("add-1")).toBe("added");
+    expect(readProgress().garden).toEqual(["add-2", "add-1"]);
+    expect(toggleGarden("add-2")).toBe("removed");
+    expect(readProgress().garden).toEqual(["add-1"]);
+    resetProgress();
+    expect(readProgress().garden).toEqual([]);
   });
 
   it("壊れた値が入っていても空の記録として読める", () => {

@@ -1,6 +1,6 @@
 import { getStage, isModeId, type ModeId } from "@/data/stages/catalog";
 import { isChallengeModeId, type ChallengeModeId } from "@/lib/game/challenge-rules";
-import type { StarMap } from "@/lib/game/progression";
+import { GARDEN_LIMIT, type StarMap } from "@/lib/game/progression";
 import type { EarnedStars, Stars } from "@/lib/game/stars";
 import { createLocalStore } from "@/lib/local-store";
 
@@ -11,11 +11,12 @@ export interface Progress {
   readonly stars: StarMap;
   readonly best: Readonly<Record<string, number>>;
   readonly challengeBest: Readonly<Partial<Record<ChallengeModeId, number>>>;
+  readonly garden: readonly string[];
   readonly lastModeId?: ModeId;
   readonly titleSeen: boolean;
 }
 
-export const EMPTY_PROGRESS: Progress = { stars: {}, best: {}, challengeBest: {}, titleSeen: false };
+export const EMPTY_PROGRESS: Progress = { stars: {}, best: {}, challengeBest: {}, garden: [], titleSeen: false };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -57,8 +58,21 @@ export function parseProgress(raw: string | null): Progress {
       if (isChallengeModeId(id) && isScore(value)) challengeBest[id] = value;
     }
   }
+  const garden: string[] = [];
+  if (Array.isArray(data.garden)) {
+    for (const id of data.garden) {
+      if (typeof id === "string" && getStage(id) && !garden.includes(id) && garden.length < GARDEN_LIMIT) garden.push(id);
+    }
+  }
   const lastModeId = typeof data.lastModeId === "string" && isModeId(data.lastModeId) ? data.lastModeId : undefined;
-  return { stars, best, challengeBest, titleSeen: data.titleSeen === true, ...(lastModeId ? { lastModeId } : {}) };
+  return {
+    stars,
+    best,
+    challengeBest,
+    garden,
+    titleSeen: data.titleSeen === true,
+    ...(lastModeId ? { lastModeId } : {}),
+  };
 }
 
 export function withResult(
@@ -91,6 +105,16 @@ export function withChallengeScore(
   const before = progress.challengeBest[mode];
   if (before !== undefined && score <= before) return { progress, newBest: false };
   return { progress: { ...progress, challengeBest: { ...progress.challengeBest, [mode]: score } }, newBest: true };
+}
+
+export type GardenToggle = "added" | "removed" | "full";
+
+export function withGardenToggle(progress: Progress, stageId: string): { progress: Progress; result: GardenToggle } {
+  if (progress.garden.includes(stageId)) {
+    return { progress: { ...progress, garden: progress.garden.filter((id) => id !== stageId) }, result: "removed" };
+  }
+  if (progress.garden.length >= GARDEN_LIMIT) return { progress, result: "full" };
+  return { progress: { ...progress, garden: [...progress.garden, stageId] }, result: "added" };
 }
 
 const store = createLocalStore(PROGRESS_KEY, parseProgress, EMPTY_PROGRESS);
@@ -135,6 +159,12 @@ export function recordChallengeResult(
   const { progress, newBest } = withChallengeScore(current, mode, score);
   if (newBest) save(progress);
   return { newBest, bestBefore };
+}
+
+export function toggleGarden(stageId: string): GardenToggle {
+  const { progress, result } = withGardenToggle(store.read(), stageId);
+  if (result !== "full") save(progress);
+  return result;
 }
 
 export function rememberLastMode(mode: ModeId): void {
