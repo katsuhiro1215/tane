@@ -56,6 +56,9 @@
   --color-cta-to: var(--cta-to);
   --color-cta-edge: var(--cta-edge);
   --color-cream-edge: var(--cream-edge);
+  --color-fever-from: var(--fever-from);
+  --color-fever-mid: var(--fever-mid);
+  --color-fever-to: var(--fever-to);
 }
 
 :root {
@@ -87,6 +90,9 @@
   --cta-to: #f28b1d;
   --cta-edge: #b8610f;
   --cream-edge: #e3d3b0;
+  --fever-from: #ff7ac8;
+  --fever-mid: #8a2be2;
+  --fever-to: #2a0f5c;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -203,17 +209,49 @@
   }
   .animate-bubble-in { animation: bubble-in 0.25s ease-out both; }
 
+  @keyframes float-up {
+    0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+    15% { transform: translate(-50%, -6px) scale(1.1); opacity: 1; }
+    100% { transform: translate(-50%, -64px) scale(1); opacity: 0; }
+  }
+  .animate-float-up { animation: float-up 0.9s ease-out forwards; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+  .animate-shake { animation: shake 0.4s ease-in-out; }
+
+  @keyframes fever-banner {
+    0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+    40% { transform: scale(1.15) rotate(-4deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-4deg); opacity: 1; }
+  }
+  .animate-fever-banner { animation: fever-banner 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+
+  @keyframes beams-spin {
+    to { transform: rotate(360deg); }
+  }
+  .animate-beams { animation: beams-spin 12s linear infinite; }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-spru-bob,
     .animate-spru-hop,
     .animate-pop-in,
     .animate-grow-in,
     .animate-pulse-soft,
-    .animate-bubble-in {
+    .animate-bubble-in,
+    .animate-shake,
+    .animate-fever-banner,
+    .animate-beams {
       animation: none !important;
     }
     .animate-sparkle,
-    .animate-grow-out {
+    .animate-grow-out,
+    .animate-float-up {
       display: none;
     }
   }
