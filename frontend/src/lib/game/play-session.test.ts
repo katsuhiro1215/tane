@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { FEVER_PROBLEMS } from "@/lib/game/play-rules";
 import { answer, INITIAL_SESSION, speedPoints, type AnswerInput, type PlaySession } from "@/lib/game/play-session";
 
 const SLOW = 9000; // 目安(4秒)より遅い
@@ -100,5 +101,24 @@ describe("点数・コンボ・時間", () => {
     expect(session.elapsedMs).toBe(11000);
     expect(session.answered).toBe(4);
     expect(outcomes.map((o) => o.session.combo)).toEqual([1, 2, 0, 1]);
+  });
+});
+
+describe("足す点（チャレンジの段の点）", () => {
+  it("正解の点に足し、フィーバー中は一緒に2倍。不正解は0", () => {
+    expect(answer(INITIAL_SESSION, { ...input(true, SLOW), bonusPoints: 40 }).gained).toBe(140);
+    const fever: PlaySession = { ...INITIAL_SESSION, gauge: 100, feverLeft: 3 };
+    expect(answer(fever, { ...input(true, SLOW), bonusPoints: 40 }).gained).toBe(280);
+    expect(answer(INITIAL_SESSION, { ...input(false, SLOW), bonusPoints: 40 }).gained).toBe(0);
+  });
+
+  it("足す点を渡さなければ今までと同じ", () => {
+    expect(answer(INITIAL_SESSION, input(true, SLOW)).gained).toBe(100);
+  });
+
+  it("終わりの決まっていないプレイ（残りが無限）でも、フィーバーは5問", () => {
+    const outcome = answer({ ...INITIAL_SESSION, gauge: 90 }, input(true, SLOW, Number.POSITIVE_INFINITY));
+    expect(outcome.feverStarted).toBe(true);
+    expect(outcome.session.feverLeft).toBe(FEVER_PROBLEMS);
   });
 });

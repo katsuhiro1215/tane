@@ -25,6 +25,8 @@ export interface AnswerInput {
   elapsedMs: number;
   secondsPerProblem: number;
   remainingAfter: number;
+  /** 正解のときだけ足す点（チャレンジの段の点）。フィーバー中は一緒に2倍 */
+  bonusPoints?: number;
 }
 
 export interface AnswerOutcome {
@@ -43,7 +45,9 @@ export function speedPoints(elapsedMs: number, secondsPerProblem: number): numbe
 
 export function answer(session: PlaySession, input: AnswerInput): AnswerOutcome {
   const inFever = session.feverLeft > 0;
-  const base = input.correct ? BASE_POINTS + speedPoints(input.elapsedMs, input.secondsPerProblem) : 0;
+  const base = input.correct
+    ? BASE_POINTS + speedPoints(input.elapsedMs, input.secondsPerProblem) + (input.bonusPoints ?? 0)
+    : 0;
   const gained = inFever ? base * FEVER_MULTIPLIER : base;
   const common = {
     score: session.score + gained,
