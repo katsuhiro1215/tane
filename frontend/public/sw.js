@@ -1,4 +1,4 @@
-const CACHE_NAME = "tane-cache-v1";
+const CACHE_NAME = "tane-cache-v2";
 const APP_SHELL = ["/manifest.json", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -22,6 +22,12 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") {
+    return;
+  }
+
+  // 音声はRange要求(206)で読まれる。キャッシュから返すとSafariで鳴らなくなり、206はcache.putもできないため素通りさせる
+  const url = new URL(request.url);
+  if (request.headers.has("range") || url.pathname.startsWith("/sounds/")) {
     return;
   }
 

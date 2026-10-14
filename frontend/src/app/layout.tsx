@@ -3,6 +3,8 @@ import { Geist_Mono, Hachi_Maru_Pop, Zen_Maru_Gothic } from "next/font/google";
 
 import "./globals.css";
 
+import { BgmRouter } from "@/components/app/bgm-router";
+import { SoundProvider } from "@/components/app/sound-provider";
 import { PwaRegister } from "@/components/pwa-register";
 
 // Zen Maru Gothicをアプリ全体の基本フォント(--font-sans)として採用する。
@@ -46,7 +48,10 @@ export default function RootLayout({
       className={`${zenMaruGothic.variable} ${geistMono.variable} ${hachiMaruPop.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        {children}
+        <SoundProvider>
+          {children}
+          <BgmRouter />
+        </SoundProvider>
         <PwaRegister />
       </body>
     </html>
