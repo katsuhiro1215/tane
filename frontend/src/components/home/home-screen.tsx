@@ -9,12 +9,12 @@ import { TitleScreen } from "@/components/home/title-screen";
 import { useProgress } from "@/lib/progress-store";
 
 export function HomeScreen() {
-  const { stars, lastModeId, titleSeen } = useProgress();
+  const { stars, lastModeId, titleSeen, garden } = useProgress();
   if (!titleSeen) return <TitleScreen />;
   return (
     <main className="flex flex-1 flex-col pb-24">
       <HomeHud stars={stars} />
-      <Garden stars={stars} />
+      <Garden stars={stars} chosen={garden} />
       <div className="px-4">
         <ContinueButton stars={stars} lastModeId={lastModeId} />
       </div>

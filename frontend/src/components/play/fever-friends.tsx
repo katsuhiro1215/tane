@@ -9,8 +9,8 @@ import { growthImage, SPRU_POSES } from "@/lib/spru-images";
 
 /** フィーバー中に応援に集まる仲間。hopKey が変わるたび（正解のたび）に跳ねる */
 export function FeverFriends({ hopKey }: { hopKey: number }) {
-  const { stars } = useProgress();
-  const friends = gardenFriends(stars);
+  const { stars, garden } = useProgress();
+  const friends = gardenFriends(stars, garden);
   return (
     <div aria-hidden className="flex h-14 items-end justify-center gap-1 px-4">
       {friends.length === 0 ? (

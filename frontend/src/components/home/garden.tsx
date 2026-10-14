@@ -21,11 +21,11 @@ const SLOTS = [
   { right: "38%", top: 180, width: 34 },
 ] as const;
 
-export function Garden({ stars }: { stars: StarMap }) {
+export function Garden({ stars, chosen }: { stars: StarMap; chosen: readonly string[] }) {
   const { play } = useSound();
   const [hops, setHops] = useState(0);
   const [line, setLine] = useState(0);
-  const friends = gardenFriends(stars);
+  const friends = gardenFriends(stars, chosen);
 
   function talk() {
     play("select");
