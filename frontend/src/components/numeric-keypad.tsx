@@ -1,6 +1,8 @@
 "use client";
 
+import { appButtonVariants } from "@/components/app/button";
 import { appendDigit, canSubmit, removeLastDigit } from "@/lib/game/answer-input";
+import { cn } from "@/lib/utils";
 
 interface NumericKeypadProps {
   value: string;
@@ -37,7 +39,7 @@ export function NumericKeypad({ value, onChange, onSubmit, disabled }: NumericKe
           type="button"
           onClick={() => handleKeyPress(key)}
           disabled={disabled || (key === "OK" && !canSubmit(value))}
-          className="h-14 rounded-2xl border-b-4 border-border bg-secondary text-xl font-bold text-secondary-foreground transition active:translate-y-[2px] active:border-b-[2px] disabled:translate-y-0 disabled:border-b-4 disabled:opacity-40"
+          className={cn(appButtonVariants({ variant: key === "OK" ? "cta" : "cream", size: "lg" }), "w-full")}
         >
           {key}
         </button>

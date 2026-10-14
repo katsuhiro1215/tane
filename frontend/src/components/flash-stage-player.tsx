@@ -1,184 +1,135 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
-import { HpGauge } from "@/components/hp-gauge";
+import { Panel } from "@/components/app/panel";
+import { useSound } from "@/components/app/sound-provider";
 import { NumericKeypad } from "@/components/numeric-keypad";
-import { growthStageFor, SpruCharacter } from "@/components/spru-character";
-import { getFlashStageById, getNextFlashStage } from "@/data/problems/flash-stages";
+import { FeedbackText, poseFor, type Feedback } from "@/components/play/feedback-text";
+import { PlayHeader } from "@/components/play/play-header";
+import { StageNotFound } from "@/components/play/stage-not-found";
+import { StageResult, type StageOutcome } from "@/components/play/stage-result";
+import { getStage, PROBLEMS_PER_STAGE, type FlashStage } from "@/data/stages/catalog";
 import { generateFlashStageProblems, type FlashProblem } from "@/lib/game/flash-problem";
-import { INITIAL_HP } from "@/lib/game/hp";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
-import { markStageCleared } from "@/lib/storage";
+import { mistakesOf, starsForResult } from "@/lib/game/stars";
+import { modeHref } from "@/lib/mode-params";
+import { recordStageResult, rememberLastMode } from "@/lib/progress-store";
+import { SPRU_POSES } from "@/lib/spru-images";
 import { useFlashSequence } from "@/lib/use-flash-sequence";
 
 const FEEDBACK_DELAY_MS = 600;
 
-// useFlashSequenceのフォールバック引数に毎回新しいリテラル[]を渡すと、
-// useEffectの依存配列が毎レンダー変わり無限に再スケジュールされてしまう
-// (storage.tsのgetServerSnapshotで踏んだのと同種のバグ)。
-// モジュールスコープの定数配列を使い参照を安定させる。
+// useFlashSequence に毎回新しい [] を渡すと effect の依存が毎回変わり、表示が止まらなくなる
 const EMPTY_SEQUENCE: number[] = [];
 
 function formatFlashNumber(value: number, index: number): string {
-  if (index === 0) {
-    return String(value);
-  }
+  if (index === 0) return String(value);
   return value >= 0 ? `+${value}` : String(value);
 }
 
-export function FlashStagePlayer({ stageId }: { stageId: string }) {
-  const router = useRouter();
-  const stageDefinition = getFlashStageById(stageId);
+function newStage(stage: FlashStage): StageState<FlashProblem> {
+  return createStage(generateFlashStageProblems(stage.rule, PROBLEMS_PER_STAGE));
+}
 
-  // 問題生成にはMath.randomを使うため、サーバー側でレンダーすると
-  // クライアントと異なる問題が焼き込まれハイドレーション不一致になる。
-  // このコンポーネントはFlashStagePlayerLoader経由でssr:falseかつ
-  // key={stageId}付きでマウントされる(既存のStagePlayerと同じパターン)。
-  const [state, setState] = useState<StageState<FlashProblem> | null>(() => {
-    if (!stageDefinition) {
-      return null;
-    }
-    const problems = generateFlashStageProblems(stageDefinition.rule);
-    return createStage(problems);
-  });
+export function FlashStagePlayer({ stageId }: { stageId: string }) {
+  const found = getStage(stageId);
+  const stage = found?.kind === "flash" ? found : undefined;
+  const { play } = useSound();
+
+  // 問題は Math.random で作るため、FlashStagePlayerLoader が ssr: false・key={stageId} で読み込む
+  const [state, setState] = useState<StageState<FlashProblem> | null>(() => (stage ? newStage(stage) : null));
   const [inputValue, setInputValue] = useState("");
-  const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
+  const [feedback, setFeedback] = useState<Feedback>(null);
+  const [outcome, setOutcome] = useState<StageOutcome | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     };
   }, []);
 
-  const timing = stageDefinition?.rule;
-  const problem =
-    state && state.status === "in-progress" ? currentProblem(state) : null;
+  useEffect(() => {
+    if (stage) rememberLastMode(stage.mode);
+  }, [stage]);
+
+  const problem = state && state.status === "in-progress" ? currentProblem(state) : null;
   const flash = useFlashSequence(
     problem?.sequence ?? EMPTY_SEQUENCE,
-    timing?.stepMs ?? 0,
-    timing?.gapMs ?? 0
+    stage?.rule.stepMs ?? 0,
+    stage?.rule.gapMs ?? 0
   );
 
-  if (!stageDefinition || !state) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-background p-6">
-        <p className="text-foreground">ステージが見つかりません</p>
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="rounded-full border-b-4 border-[#C98A1B] bg-accent px-6 py-3 font-bold text-accent-foreground transition active:translate-y-[2px] active:border-b-2"
-        >
-          ステージ一覧に戻る
-        </button>
-      </div>
-    );
-  }
+  if (!stage || !state) return <StageNotFound />;
+  const current = stage;
 
   function handleSubmit() {
-    if (!state || inputValue === "" || feedback !== null || flash.phase !== "answering") {
-      return;
-    }
-    const currentProb = currentProblem(state);
-    const isCorrect = Number(inputValue) === currentProb.answer;
+    if (!state || inputValue === "" || feedback !== null || flash.phase !== "answering") return;
+    const isCorrect = Number(inputValue) === currentProblem(state).answer;
     const next = submitAnswer(state, Number(inputValue));
-
     setFeedback(isCorrect ? "correct" : "incorrect");
+    play(isCorrect ? "correct" : "incorrect");
     setInputValue("");
 
+    // 結果の記録は、このタイマーの中で1回だけ行う
     feedbackTimeoutRef.current = setTimeout(() => {
       setState(next);
       setFeedback(null);
-      if (next.status === "cleared") {
-        markStageCleared(stageId);
+      if (next.status !== "in-progress") {
+        const stars = starsForResult(next.status, mistakesOf(next));
+        const { improved, before } = recordStageResult(current.id, stars);
+        setOutcome({ stars, improved, before });
+        if (next.status === "cleared") play("allCorrect");
       }
     }, FEEDBACK_DELAY_MS);
   }
 
-  if (state.status !== "in-progress") {
-    const nextStage = getNextFlashStage(stageId);
+  function retry() {
+    setState(newStage(current));
+    setOutcome(null);
+    setInputValue("");
+  }
+
+  if (state.status !== "in-progress" && outcome) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-background p-6">
-        <SpruCharacter
-          stage={growthStageFor(state.correctCount, state.problems.length)}
-          className="h-40 w-40"
-        />
-        <p className="text-2xl font-bold text-foreground">
-          {state.status === "cleared" ? "ステージクリア！" : "また挑戦しよう！"}
-        </p>
-        <p className="text-foreground">
-          {state.correctCount} / {state.problems.length} 問正解
-        </p>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="rounded-full border-b-4 border-border bg-secondary px-6 py-3 font-bold text-secondary-foreground transition active:translate-y-[2px] active:border-b-2"
-          >
-            ステージ一覧に戻る
-          </button>
-          {state.status === "cleared" && nextStage && (
-            <button
-              type="button"
-              onClick={() => router.push(`/flash/${nextStage.id}`)}
-              className="rounded-full border-b-4 border-[#C98A1B] bg-accent px-6 py-3 font-bold text-accent-foreground transition active:translate-y-[2px] active:border-b-2"
-            >
-              次のステージへ
-            </button>
-          )}
-        </div>
-      </div>
+      <StageResult
+        stage={current}
+        cleared={state.status === "cleared"}
+        correctCount={state.correctCount}
+        total={state.problems.length}
+        outcome={outcome}
+        onRetry={retry}
+      />
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 bg-background p-4">
-      <div className="flex w-full items-center justify-between">
-        <HpGauge value={state.hp} max={INITIAL_HP} />
-        <span className="rounded-full border border-border bg-card px-3 py-1 text-sm font-bold text-foreground">
-          {state.currentIndex + 1} / {state.problems.length}
-        </span>
-      </div>
-
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-[28px] border-[6px] border-[#6B4226] bg-primary p-4">
-        <SpruCharacter
-          stage={growthStageFor(state.correctCount, state.problems.length)}
-          className="h-20 w-20 shrink-0"
-        />
-
+    <main className="flex flex-1 flex-col gap-3 pb-4">
+      <PlayHeader
+        backHref={modeHref(current.mode, { stageId: current.id })}
+        hp={state.hp}
+        index={Math.min(state.currentIndex + 1, state.problems.length)}
+        total={state.problems.length}
+      />
+      <Panel className="mx-4 flex flex-1 flex-col items-center justify-center gap-2">
+        <Image src={SPRU_POSES[poseFor(feedback)]} alt="" width={80} height={100} className="h-20 w-auto" />
         {flash.phase === "flashing" ? (
-          <p className="flex h-16 items-center text-5xl font-bold text-primary-foreground">
-            {flash.currentNumber !== null
-              ? formatFlashNumber(flash.currentNumber, flash.index)
-              : " "}
+          <p className="flex h-24 items-center font-display text-6xl font-black">
+            {flash.currentNumber !== null ? formatFlashNumber(flash.currentNumber, flash.index) : " "}
           </p>
         ) : (
           <>
-            <p className="text-2xl font-bold text-primary-foreground">合計は？</p>
-            <p className="h-10 text-4xl font-mono text-primary-foreground">
+            <p className="font-display text-2xl font-black">ぜんぶで いくつ？</p>
+            <p className="min-w-28 rounded-2xl bg-muted/60 px-4 py-1 text-center font-display text-5xl font-black">
               {inputValue || " "}
             </p>
           </>
         )}
-
-        <p
-          className={`h-8 text-xl font-bold ${
-            feedback === "correct"
-              ? "text-emerald-300"
-              : feedback === "incorrect"
-                ? "text-rose-300"
-                : "text-transparent"
-          }`}
-        >
-          {feedback === "correct" ? "せいかい！" : feedback === "incorrect" ? "ざんねん" : " "}
-        </p>
-      </div>
-
-      <div className="flex w-full justify-center pb-2">
+        <FeedbackText feedback={feedback} />
+      </Panel>
+      <div className="flex w-full justify-center px-4">
         <NumericKeypad
           value={inputValue}
           onChange={setInputValue}
@@ -186,6 +137,6 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
           disabled={feedback !== null || flash.phase !== "answering"}
         />
       </div>
-    </div>
+    </main>
   );
 }

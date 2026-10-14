@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { Problem } from "@/lib/game/problem-generator";
+import type { Problem } from "@/lib/game/problem-rules";
 import { createStage, currentProblem, submitAnswer } from "@/lib/game/stage";
 
 function makeProblems(count: number): Problem[] {

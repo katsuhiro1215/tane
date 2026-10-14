@@ -151,25 +151,6 @@
 }
 
 @layer utilities {
-  @keyframes character-bounce {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-  .animate-character-bounce {
-    animation: character-bounce 2.4s ease-in-out infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .animate-character-bounce {
-      animation: none !important;
-    }
-  }
-
   @keyframes spru-bob {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-6px); }
