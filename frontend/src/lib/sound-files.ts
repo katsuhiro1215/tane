@@ -13,4 +13,5 @@ export const SOUND_FILES: Record<SoundKey, string> = {
 export const BGM_FILES: Record<BgmTrack, string> = {
   home: "/sounds/bgm-home.mp3",
   quiz: "/sounds/bgm-quiz.mp3",
+  fever: "/sounds/bgm-minigame.mp3",
 };
