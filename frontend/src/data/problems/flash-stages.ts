@@ -1,15 +1,21 @@
-import { FLASH_LEVELS, type FlashLevel } from "@/lib/game/flash-problem";
+import type { FlashRule } from "@/lib/game/flash-problem";
 
 export interface FlashStageDefinition {
   id: string;
-  level: FlashLevel;
+  rule: FlashRule;
   title: string;
 }
 
-export const FLASH_STAGES: FlashStageDefinition[] = FLASH_LEVELS.map((level) => ({
-  id: `flash-${level}`,
-  level,
-  title: `フラッシュ暗算 Lv.${level}`,
+const RULES: FlashRule[] = [
+  { count: 3, digits: 1, stepMs: 1200, gapMs: 300 },
+  { count: 4, digits: 1, stepMs: 900, gapMs: 250 },
+  { count: 5, digits: 1, stepMs: 700, gapMs: 200 },
+];
+
+export const FLASH_STAGES: FlashStageDefinition[] = RULES.map((rule, index) => ({
+  id: `flash-${index + 1}`,
+  rule,
+  title: `フラッシュ暗算 Lv.${index + 1}`,
 }));
 
 export function getFlashStageById(id: string): FlashStageDefinition | undefined {

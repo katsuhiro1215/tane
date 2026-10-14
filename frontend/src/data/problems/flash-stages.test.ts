@@ -22,7 +22,7 @@ describe("FLASH_STAGES", () => {
 describe("getFlashStageById", () => {
   it("存在するidを渡すと該当ステージを返す", () => {
     const stage = getFlashStageById("flash-1");
-    expect(stage?.level).toBe(1);
+    expect(stage?.rule.count).toBe(3);
   });
 
   it("存在しないidを渡すとundefinedを返す", () => {

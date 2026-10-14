@@ -7,23 +7,13 @@ import { HpGauge } from "@/components/hp-gauge";
 import { NumericKeypad } from "@/components/numeric-keypad";
 import { growthStageFor, SpruCharacter } from "@/components/spru-character";
 import { getFlashStageById, getNextFlashStage } from "@/data/problems/flash-stages";
-import {
-  generateFlashStageProblems,
-  type FlashLevel,
-  type FlashProblem,
-} from "@/lib/game/flash-problem";
+import { generateFlashStageProblems, type FlashProblem } from "@/lib/game/flash-problem";
 import { INITIAL_HP } from "@/lib/game/hp";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
 import { markStageCleared } from "@/lib/storage";
 import { useFlashSequence } from "@/lib/use-flash-sequence";
 
 const FEEDBACK_DELAY_MS = 600;
-
-const LEVEL_TIMING: Record<FlashLevel, { stepMs: number; gapMs: number }> = {
-  1: { stepMs: 1200, gapMs: 300 },
-  2: { stepMs: 900, gapMs: 250 },
-  3: { stepMs: 700, gapMs: 200 },
-};
 
 // useFlashSequenceのフォールバック引数に毎回新しいリテラル[]を渡すと、
 // useEffectの依存配列が毎レンダー変わり無限に再スケジュールされてしまう
@@ -50,7 +40,7 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
     if (!stageDefinition) {
       return null;
     }
-    const problems = generateFlashStageProblems(stageDefinition.level);
+    const problems = generateFlashStageProblems(stageDefinition.rule);
     return createStage(problems);
   });
   const [inputValue, setInputValue] = useState("");
@@ -65,7 +55,7 @@ export function FlashStagePlayer({ stageId }: { stageId: string }) {
     };
   }, []);
 
-  const timing = stageDefinition ? LEVEL_TIMING[stageDefinition.level] : undefined;
+  const timing = stageDefinition?.rule;
   const problem =
     state && state.status === "in-progress" ? currentProblem(state) : null;
   const flash = useFlashSequence(
