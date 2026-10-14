@@ -100,4 +100,20 @@ describe("gardenFriends", () => {
     expect(gardenFriends(stars).map((s) => s.id)).toEqual(["add-3", "add-2", "sub-1", "add-1"]);
     expect(gardenFriends(cleared("add", 12))).toHaveLength(8);
   });
+
+  it("選んだ子を選んだ順に先に並べ、足りない分を自動で埋める（重ならない）", () => {
+    const stars: StarMap = { "add-1": 1, "add-2": 3, "add-3": 3, "sub-1": 2 };
+    expect(gardenFriends(stars, ["add-1"]).map((s) => s.id)).toEqual(["add-1", "add-3", "add-2", "sub-1"]);
+    expect(gardenFriends(stars, ["sub-1", "add-1"]).map((s) => s.id)).toEqual(["sub-1", "add-1", "add-3", "add-2"]);
+  });
+
+  it("会えていない子・知らないidは選んでいても出さない", () => {
+    const stars: StarMap = { "add-1": 1, "add-2": 3 };
+    expect(gardenFriends(stars, ["mul-1", "zzz-1", "add-1"]).map((s) => s.id)).toEqual(["add-1", "add-2"]);
+  });
+
+  it("8体選んでいれば、その8体だけ", () => {
+    const chosen = stagesOfMode("add").slice(0, 8).map((s) => s.id);
+    expect(gardenFriends(cleared("add", 12), chosen).map((s) => s.id)).toEqual(chosen);
+  });
 });

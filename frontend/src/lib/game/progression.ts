@@ -1,4 +1,4 @@
-import { MODE_IDS, STAGES, stagesOfMode, type ModeId, type Stage } from "@/data/stages/catalog";
+import { getStage, MODE_IDS, STAGES, stagesOfMode, type ModeId, type Stage } from "@/data/stages/catalog";
 import type { EarnedStars, Stars } from "@/lib/game/stars";
 
 export type StarMap = Readonly<Partial<Record<string, EarnedStars>>>;
@@ -64,10 +64,15 @@ export function initialFocusStage(mode: ModeId, stars: StarMap, requestedStageId
   return unlocked[unlocked.length - 1];
 }
 
-export function gardenFriends(stars: StarMap, limit: number = GARDEN_LIMIT): Stage[] {
-  return STAGES.map((stage, order) => ({ stage, order, stars: starsOf(stars, stage.id) }))
-    .filter((entry) => entry.stars >= 1)
+/** にわに出す子。選んだ子（会えた子だけ）を選んだ順に先に並べ、足りない分を★の多い順・後ろのステージ順で埋める */
+export function gardenFriends(stars: StarMap, chosen: readonly string[] = [], limit: number = GARDEN_LIMIT): Stage[] {
+  const picked = chosen
+    .map((id) => getStage(id))
+    .filter((stage): stage is Stage => stage !== undefined && starsOf(stars, stage.id) >= 1);
+  const pickedIds = new Set(picked.map((stage) => stage.id));
+  const auto = STAGES.map((stage, order) => ({ stage, order, stars: starsOf(stars, stage.id) }))
+    .filter((entry) => entry.stars >= 1 && !pickedIds.has(entry.stage.id))
     .sort((x, y) => y.stars - x.stars || y.order - x.order)
-    .slice(0, limit)
     .map((entry) => entry.stage);
+  return [...picked, ...auto].slice(0, limit);
 }
