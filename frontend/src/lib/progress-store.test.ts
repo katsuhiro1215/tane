@@ -6,9 +6,11 @@ import {
   parseProgress,
   PROGRESS_KEY,
   readProgress,
+  recordChallengeResult,
   recordStageResult,
   rememberLastMode,
   resetProgress,
+  withChallengeScore,
   withResult,
 } from "@/lib/progress-store";
 import { SETTINGS_KEY } from "@/lib/settings-store";
@@ -23,13 +25,14 @@ describe("parseProgress", () => {
 
   it("★は1〜3の整数だけ、知らないステージidは捨てる", () => {
     const raw = JSON.stringify({ stars: { "add-1": 3, "add-2": 0, "add-3": 4, "add-4": "2", "zzz-1": 3, "flash-6": 2 }, titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 3, "flash-6": 2 }, best: {}, titleSeen: true });
+    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 3, "flash-6": 2 }, best: {}, challengeBest: {}, titleSeen: true });
   });
 
   it("lastModeId は知っているあそびだけ、titleSeen は true のときだけ", () => {
     expect(parseProgress(JSON.stringify({ stars: {}, lastModeId: "mul", titleSeen: "yes" }))).toEqual({
       stars: {},
       best: {},
+      challengeBest: {},
       lastModeId: "mul",
       titleSeen: false,
     });
@@ -43,7 +46,22 @@ describe("parseProgress", () => {
 
   it("分割1の記録（best が無い）も★を残して読める", () => {
     const raw = JSON.stringify({ stars: { "add-1": 2 }, lastModeId: "add", titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 2 }, best: {}, lastModeId: "add", titleSeen: true });
+    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 2 }, best: {}, challengeBest: {}, lastModeId: "add", titleSeen: true });
+  });
+
+  it("challengeBest は知っているチャレンジのあそびの、0以上の整数だけ", () => {
+    const raw = JSON.stringify({
+      stars: {},
+      challengeBest: { add: 3200, mix: 0, flash: 100, div: -1, mul: 1.5, sub: "9" },
+    });
+    expect(parseProgress(raw).challengeBest).toEqual({ add: 3200, mix: 0 });
+  });
+
+  it("challengeBest が無い・形が違う記録は空で、★は残る", () => {
+    expect(parseProgress(JSON.stringify({ stars: { "add-1": 1 }, challengeBest: [1, 2] }))).toMatchObject({
+      stars: { "add-1": 1 },
+      challengeBest: {},
+    });
   });
 });
 
@@ -77,6 +95,27 @@ describe("withResult", () => {
     expect(higher).toMatchObject({ improved: false, newBest: true });
     expect(higher.progress.stars["add-1"]).toBe(2);
     expect(higher.progress.best["add-1"]).toBe(1500);
+  });
+});
+
+describe("withChallengeScore", () => {
+  it("前の最高点を上回ったときだけ保存する（初めては0点でも最高記録）", () => {
+    const first = withChallengeScore(EMPTY_PROGRESS, "add", 0);
+    expect(first.newBest).toBe(true);
+    expect(first.progress.challengeBest).toEqual({ add: 0 });
+
+    const higher = withChallengeScore(first.progress, "add", 2400);
+    expect(higher.newBest).toBe(true);
+    expect(higher.progress.challengeBest).toEqual({ add: 2400 });
+
+    const lower = withChallengeScore(higher.progress, "add", 1800);
+    expect(lower).toEqual({ progress: higher.progress, newBest: false });
+    expect(withChallengeScore(higher.progress, "add", 2400).newBest).toBe(false);
+  });
+
+  it("ほかのあそびの最高点と★には触らない", () => {
+    const base = { ...EMPTY_PROGRESS, stars: { "add-1": 3 as const }, challengeBest: { mix: 500 } };
+    expect(withChallengeScore(base, "div", 900).progress).toEqual({ ...base, challengeBest: { mix: 500, div: 900 } });
   });
 });
 
@@ -133,6 +172,18 @@ describe("localStorage への読み書き", () => {
     expect(store.has(PROGRESS_KEY)).toBe(false);
     expect(store.get(SETTINGS_KEY)).toBe(JSON.stringify({ se: false, bgm: true }));
     expect(readProgress()).toEqual(EMPTY_PROGRESS);
+  });
+
+  it("recordChallengeResult は上回ったときだけ保存し、前の最高点を返す", () => {
+    expect(recordChallengeResult("add", 1500)).toEqual({ newBest: true, bestBefore: null });
+    expect(recordChallengeResult("add", 900)).toEqual({ newBest: false, bestBefore: 1500 });
+    expect(readProgress().challengeBest).toEqual({ add: 1500 });
+  });
+
+  it("resetProgress でチャレンジの最高点も消える", () => {
+    recordChallengeResult("mix", 2000);
+    resetProgress();
+    expect(readProgress().challengeBest).toEqual({});
   });
 
   it("壊れた値が入っていても空の記録として読める", () => {
