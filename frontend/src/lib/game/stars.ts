@@ -4,12 +4,24 @@ export type Stars = 0 | 1 | 2 | 3;
 export type EarnedStars = 1 | 2 | 3;
 export type Growth = "seed" | "sprout" | "bud" | "flower";
 
-// 分割2で★3に「目標タイム以内」を足すときは、この関数だけを直す
-export function starsForResult(status: StageStatus, mistakes: number): Stars {
+export interface StageResultInput {
+  status: StageStatus;
+  mistakes: number;
+  elapsedMs: number;
+  targetMs: number;
+}
+
+export function starsForResult({ status, mistakes, elapsedMs, targetMs }: StageResultInput): Stars {
   if (status !== "cleared") return 0;
-  if (mistakes === 0) return 3;
+  if (mistakes === 0 && elapsedMs <= targetMs) return 3;
   if (mistakes <= 2) return 2;
   return 1;
+}
+
+/** ミスなしでクリアしたのに時間で★3を逃したとき、目標タイムを超えたミリ秒。それ以外は null */
+export function missedThreeByMs({ status, mistakes, elapsedMs, targetMs }: StageResultInput): number | null {
+  if (status !== "cleared" || mistakes !== 0 || elapsedMs <= targetMs) return null;
+  return elapsedMs - targetMs;
 }
 
 export function mistakesOf(state: { currentIndex: number; correctCount: number }): number {

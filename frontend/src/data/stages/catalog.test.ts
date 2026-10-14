@@ -6,8 +6,10 @@ import {
   MODE_IDS,
   nextStageInMode,
   playPath,
+  SECONDS_PER_PROBLEM,
   STAGES,
   stagesOfMode,
+  targetMs,
   type Stage,
 } from "@/data/stages/catalog";
 import { SPRU_COLORS } from "@/data/stages/colors";
@@ -106,5 +108,23 @@ describe("検索", () => {
   it("playPath はフラッシュだけ /flash", () => {
     expect(playPath(getStage("add-1")!)).toBe("/stage/add-1");
     expect(playPath(getStage("flash-2")!)).toBe("/flash/flash-2");
+  });
+});
+
+describe("目安の秒数と目標タイム（設計書2.5）", () => {
+  it("あそびごとの秒数が設計書の表どおり", () => {
+    expect(SECONDS_PER_PROBLEM).toEqual({
+      add: [4, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 8],
+      sub: [4, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 8],
+      mul: [4, 4, 4, 4, 4, 4, 5, 7, 7, 10, 12, 9],
+      div: [5, 5, 5, 5, 5, 6, 8, 10, 12, 9, 14, 10],
+      flash: [5, 5, 5, 6, 5, 8],
+    });
+  });
+
+  it("すべてのステージに秒数があり、目標タイムは 秒数×20問", () => {
+    for (const s of STAGES) expect(s.secondsPerProblem).toBeGreaterThan(0);
+    expect(targetMs(getStage("add-1")!)).toBe(80_000);
+    expect(targetMs(getStage("div-11")!)).toBe(280_000);
   });
 });

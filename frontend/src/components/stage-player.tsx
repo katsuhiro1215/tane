@@ -10,7 +10,7 @@ import { FeedbackText, poseFor, type Feedback } from "@/components/play/feedback
 import { PlayHeader } from "@/components/play/play-header";
 import { StageNotFound } from "@/components/play/stage-not-found";
 import { StageResult, type StageOutcome } from "@/components/play/stage-result";
-import { getStage, PROBLEMS_PER_STAGE, type ArithmeticStage } from "@/data/stages/catalog";
+import { getStage, PROBLEMS_PER_STAGE, targetMs, type ArithmeticStage } from "@/data/stages/catalog";
 import { generateProblems, type Operator, type Problem } from "@/lib/game/problem-rules";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
 import { mistakesOf, starsForResult } from "@/lib/game/stars";
@@ -64,7 +64,12 @@ export function StagePlayer({ stageId }: { stageId: string }) {
       setState(next);
       setFeedback(null);
       if (next.status !== "in-progress") {
-        const stars = starsForResult(next.status, mistakesOf(next));
+        const stars = starsForResult({
+          status: next.status,
+          mistakes: mistakesOf(next),
+          elapsedMs: 0,
+          targetMs: targetMs(current),
+        });
         const { improved, before } = recordStageResult(current.id, stars);
         setOutcome({ stars, improved, before });
         if (next.status === "cleared") play("allCorrect");

@@ -1,19 +1,44 @@
 import { describe, expect, it } from "vitest";
 
-import { growthForStars, mistakesOf, starsForResult } from "@/lib/game/stars";
+import { growthForStars, missedThreeByMs, mistakesOf, starsForResult, type StageResultInput } from "@/lib/game/stars";
+
+const result = (overrides: Partial<StageResultInput>): StageResultInput => ({
+  status: "cleared",
+  mistakes: 0,
+  elapsedMs: 50_000,
+  targetMs: 80_000,
+  ...overrides,
+});
 
 describe("starsForResult", () => {
-  it("ミス0で★3、2回まで★2、それ以上は★1", () => {
-    expect(starsForResult("cleared", 0)).toBe(3);
-    expect(starsForResult("cleared", 1)).toBe(2);
-    expect(starsForResult("cleared", 2)).toBe(2);
-    expect(starsForResult("cleared", 3)).toBe(1);
-    expect(starsForResult("cleared", 4)).toBe(1);
+  it("ミスなし かつ 目標タイム以内で★3（ちょうども含む）", () => {
+    expect(starsForResult(result({}))).toBe(3);
+    expect(starsForResult(result({ elapsedMs: 80_000 }))).toBe(3);
+  });
+
+  it("ミスなしでも目標タイムを過ぎたら★2", () => {
+    expect(starsForResult(result({ elapsedMs: 80_001 }))).toBe(2);
+  });
+
+  it("ミス1〜2回は★2、3回以上は★1（時間は関係ない）", () => {
+    expect(starsForResult(result({ mistakes: 1 }))).toBe(2);
+    expect(starsForResult(result({ mistakes: 2, elapsedMs: 999_999 }))).toBe(2);
+    expect(starsForResult(result({ mistakes: 3 }))).toBe(1);
+    expect(starsForResult(result({ mistakes: 4 }))).toBe(1);
   });
 
   it("失敗・途中は★0", () => {
-    expect(starsForResult("failed", 0)).toBe(0);
-    expect(starsForResult("in-progress", 0)).toBe(0);
+    expect(starsForResult(result({ status: "failed" }))).toBe(0);
+    expect(starsForResult(result({ status: "in-progress" }))).toBe(0);
+  });
+});
+
+describe("missedThreeByMs", () => {
+  it("ミスなしでクリアして時間を過ぎたときだけ、超えたミリ秒を返す", () => {
+    expect(missedThreeByMs(result({ elapsedMs: 83_500 }))).toBe(3_500);
+    expect(missedThreeByMs(result({}))).toBeNull();
+    expect(missedThreeByMs(result({ mistakes: 1, elapsedMs: 90_000 }))).toBeNull();
+    expect(missedThreeByMs(result({ status: "failed", elapsedMs: 90_000 }))).toBeNull();
   });
 });
 

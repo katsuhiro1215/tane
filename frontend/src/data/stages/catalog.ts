@@ -28,6 +28,15 @@ export const MODES: Record<ModeId, ModeDefinition> = {
 
 export const PROBLEMS_PER_STAGE = 20;
 
+// 1問の目安の秒数（設計書2.5）。フラッシュは答える時間だけ
+export const SECONDS_PER_PROBLEM: Record<ModeId, readonly number[]> = {
+  add: [4, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 8],
+  sub: [4, 4, 4, 4, 6, 6, 6, 8, 8, 8, 10, 8],
+  mul: [4, 4, 4, 4, 4, 4, 5, 7, 7, 10, 12, 9],
+  div: [5, 5, 5, 5, 5, 6, 8, 10, 12, 9, 14, 10],
+  flash: [5, 5, 5, 6, 5, 8],
+};
+
 interface StageBase {
   readonly id: string;
   readonly mode: ModeId;
@@ -36,6 +45,7 @@ interface StageBase {
   readonly description: string;
   readonly color: SpruColor;
   readonly isBoss: boolean;
+  readonly secondsPerProblem: number;
 }
 
 export interface ArithmeticStage extends StageBase {
@@ -81,6 +91,7 @@ function build<R>(
         description: spec.description,
         color: colorFor(mode, index, isBoss),
         isBoss,
+        secondsPerProblem: SECONDS_PER_PROBLEM[mode][index],
       },
       spec.rule
     );
@@ -120,4 +131,8 @@ export function isModeId(value: string): value is ModeId {
 
 export function playPath(stage: Stage): string {
   return stage.kind === "flash" ? `/flash/${stage.id}` : `/stage/${stage.id}`;
+}
+
+export function targetMs(stage: Stage): number {
+  return stage.secondsPerProblem * 1000 * PROBLEMS_PER_STAGE;
 }
