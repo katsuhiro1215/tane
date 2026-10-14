@@ -8,11 +8,12 @@ export const LEGACY_KEYS = ["tane:cleared-stages"] as const;
 
 export interface Progress {
   readonly stars: StarMap;
+  readonly best: Readonly<Record<string, number>>;
   readonly lastModeId?: ModeId;
   readonly titleSeen: boolean;
 }
 
-export const EMPTY_PROGRESS: Progress = { stars: {}, titleSeen: false };
+export const EMPTY_PROGRESS: Progress = { stars: {}, best: {}, titleSeen: false };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -38,20 +39,35 @@ export function parseProgress(raw: string | null): Progress {
       if (getStage(id) && isEarnedStars(value)) stars[id] = value;
     }
   }
+  const best: Record<string, number> = {};
+  if (isRecord(data.best)) {
+    for (const [id, value] of Object.entries(data.best)) {
+      if (getStage(id) && typeof value === "number" && Number.isInteger(value) && value >= 0) best[id] = value;
+    }
+  }
   const lastModeId = typeof data.lastModeId === "string" && isModeId(data.lastModeId) ? data.lastModeId : undefined;
-  return { stars, titleSeen: data.titleSeen === true, ...(lastModeId ? { lastModeId } : {}) };
+  return { stars, best, titleSeen: data.titleSeen === true, ...(lastModeId ? { lastModeId } : {}) };
 }
 
 export function withResult(
   progress: Progress,
   stageId: string,
-  stars: Stars
-): { progress: Progress; improved: boolean } {
+  stars: Stars,
+  score: number | null = null
+): { progress: Progress; improved: boolean; newBest: boolean } {
   const before = progress.stars[stageId] ?? 0;
-  if (stars === 0 || stars <= before) return { progress, improved: false };
+  const improved = stars > 0 && stars > before;
+  const bestBefore = progress.best[stageId];
+  const newBest = score !== null && (bestBefore === undefined || score > bestBefore);
+  if (!improved && !newBest) return { progress, improved, newBest };
   return {
-    progress: { ...progress, stars: { ...progress.stars, [stageId]: stars as EarnedStars } },
-    improved: true,
+    progress: {
+      ...progress,
+      stars: improved ? { ...progress.stars, [stageId]: stars as EarnedStars } : progress.stars,
+      best: newBest ? { ...progress.best, [stageId]: score as number } : progress.best,
+    },
+    improved,
+    newBest,
   };
 }
 
@@ -75,12 +91,17 @@ function save(next: Progress) {
 export const readProgress = store.read;
 export const useProgress = store.useValue;
 
-export function recordStageResult(stageId: string, stars: Stars): { improved: boolean; before: Stars } {
+export function recordStageResult(
+  stageId: string,
+  stars: Stars,
+  score: number | null = null
+): { improved: boolean; before: Stars; newBest: boolean; bestBefore: number | null } {
   const current = store.read();
   const before: Stars = current.stars[stageId] ?? 0;
-  const { progress, improved } = withResult(current, stageId, stars);
-  if (improved) save(progress);
-  return { improved, before };
+  const bestBefore = current.best[stageId] ?? null;
+  const { progress, improved, newBest } = withResult(current, stageId, stars, score);
+  if (improved || newBest) save(progress);
+  return { improved, before, newBest, bestBefore };
 }
 
 export function rememberLastMode(mode: ModeId): void {
