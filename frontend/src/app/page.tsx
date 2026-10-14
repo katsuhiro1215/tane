@@ -12,7 +12,7 @@ const CHALK_OUTLINE = {
 } as const;
 
 // Spruの隣に置く小物(本)。ひよこ暗算の「学び」のモチーフを、
-// Spru自体は差し替えずに小物で足す方針(company/tane/docs/参照)。
+// Spru自体は差し替えずに小物で足す方針(company/spra/tane/docs/参照)。
 function BookProp() {
   return (
     <svg viewBox="0 0 48 36" className="h-9 w-12 drop-shadow-md">

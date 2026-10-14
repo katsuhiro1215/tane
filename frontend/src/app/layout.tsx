@@ -6,7 +6,7 @@ import "./globals.css";
 import { PwaRegister } from "@/components/pwa-register";
 
 // Zen Maru Gothicをアプリ全体の基本フォント(--font-sans)として採用する。
-// 「ひよこ暗算」を参考にした温かみのあるテーマ(company/tane/assets/sample.png)
+// 「ひよこ暗算」を参考にした温かみのあるテーマ(company/spra/tane/assets/sample.png)
 // をトップ画面だけでなくアプリ全体に展開する方針のため。
 const zenMaruGothic = Zen_Maru_Gothic({
   variable: "--font-sans",
