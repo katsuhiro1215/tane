@@ -38,6 +38,16 @@ export function FriendSheet({ stage, progress, onClose }: { stage: Stage; progre
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
+  // 開いている間は後ろの図鑑を動かさない（設計書3章）
+  useEffect(() => {
+    const root = document.documentElement;
+    const before = root.style.overflow;
+    root.style.overflow = "hidden";
+    return () => {
+      root.style.overflow = before;
+    };
+  }, []);
+
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(null), NOTICE_MS);
@@ -50,7 +60,7 @@ export function FriendSheet({ stage, progress, onClose }: { stage: Stage; progre
   }
 
   return (
-    <div className="fixed inset-0 z-20 flex items-end bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-20 flex items-end overscroll-contain bg-black/40" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
