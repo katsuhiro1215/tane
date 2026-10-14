@@ -13,12 +13,13 @@ import { FeverBanner, FeverStage } from "@/components/play/fever-stage";
 import { finishStage } from "@/components/play/finish-stage";
 import { PlayHeader } from "@/components/play/play-header";
 import { PointsPopup } from "@/components/play/points-popup";
+import { ProblemText } from "@/components/play/problem-text";
 import { SpeedHud } from "@/components/play/speed-hud";
 import { StageNotFound } from "@/components/play/stage-not-found";
 import { StageResult, type StageOutcome } from "@/components/play/stage-result";
 import { useSpeedPlay } from "@/components/play/use-speed-play";
 import { getStage, PROBLEMS_PER_STAGE, targetMs, type ArithmeticStage } from "@/data/stages/catalog";
-import { generateProblems, type Operator, type Problem } from "@/lib/game/problem-rules";
+import { generateProblems, type Problem } from "@/lib/game/problem-rules";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
 import { modeHref } from "@/lib/mode-params";
 import { rememberLastMode } from "@/lib/progress-store";
@@ -26,8 +27,6 @@ import { SPRU_POSES } from "@/lib/spru-images";
 import { cn } from "@/lib/utils";
 
 const FEEDBACK_DELAY_MS = 600;
-
-const OPERATOR_SYMBOL: Record<Operator, string> = { add: "＋", sub: "−", mul: "×", div: "÷" };
 
 function newStage(stage: ArithmeticStage): StageState<Problem> {
   return createStage(generateProblems(stage.rule, PROBLEMS_PER_STAGE));
@@ -129,11 +128,7 @@ export function StagePlayer({ stageId }: { stageId: string }) {
         <span key={speed.session.answered} className={feedback === "correct" ? "block animate-spru-hop" : "block"}>
           <Image src={SPRU_POSES[poseFor(feedback)]} alt="" width={80} height={100} className="h-20 w-auto" />
         </span>
-        {problem && (
-          <p className="font-display text-4xl font-black tracking-wide">
-            {problem.operandA} {OPERATOR_SYMBOL[problem.operator]} {problem.operandB} ＝
-          </p>
-        )}
+        {problem && <ProblemText problem={problem} />}
         <p className="min-w-28 rounded-2xl bg-muted/60 px-4 py-1 text-center font-display text-5xl font-black">
           {inputValue || " "}
         </p>

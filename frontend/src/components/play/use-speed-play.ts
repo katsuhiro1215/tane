@@ -44,8 +44,8 @@ export function useSpeedPlay({ secondsPerProblem, answerable, questionKey }: Opt
     };
   }, [clock]);
 
-  function submit(correct: boolean, remainingAfter: number): AnswerOutcome {
-    const outcome = answer(session, { correct, elapsedMs: clock.stop(), secondsPerProblem, remainingAfter });
+  function submit(correct: boolean, remainingAfter: number, bonusPoints = 0): AnswerOutcome {
+    const outcome = answer(session, { correct, elapsedMs: clock.stop(), secondsPerProblem, remainingAfter, bonusPoints });
     setSession(outcome.session);
     setLastGain(
       outcome.gained > 0 ? { amount: outcome.gained, doubled: outcome.inFever, key: outcome.session.answered } : null
@@ -58,6 +58,18 @@ export function useSpeedPlay({ secondsPerProblem, answerable, questionKey }: Opt
     }
     if (outcome.feverEnded) playBgm("quiz");
     return outcome;
+  }
+
+  /** 時間切れで終わるとき。時計を止め、フィーバー中なら終えて曲を戻し、最後の状態を返す */
+  function finish(): PlaySession {
+    clock.stop();
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+    setBanner(false);
+    if (session.feverLeft === 0) return session;
+    playBgm("quiz");
+    const ended = { ...session, gauge: 0, feverLeft: 0 };
+    setSession(ended);
+    return ended;
   }
 
   function reset() {
@@ -73,5 +85,5 @@ export function useSpeedPlay({ secondsPerProblem, answerable, questionKey }: Opt
     return session.elapsedMs + clock.peek();
   }
 
-  return { session, banner, lastGain, submit, reset, getElapsedMs };
+  return { session, banner, lastGain, submit, finish, reset, getElapsedMs };
 }

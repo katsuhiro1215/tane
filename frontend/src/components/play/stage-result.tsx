@@ -79,17 +79,19 @@ export function StageResult({ stage, cleared, correctCount, total, outcome, onRe
         )}
       </Panel>
       <div className="flex flex-col gap-3">
-        {cleared ? (
-          links.nextHref && (
-            <Link href={links.nextHref} className={appButtonVariants({ variant: "cta", size: "xl" })}>
-              つぎのステージへ
-            </Link>
-          )
-        ) : (
-          <AppButton variant="cta" size="xl" onClick={onRetry}>
-            もういちど
-          </AppButton>
+        {cleared && links.nextHref && (
+          <Link href={links.nextHref} className={appButtonVariants({ variant: "cta", size: "xl" })}>
+            つぎのステージへ
+          </Link>
         )}
+        {/* つぎのステージがあるときは、そちらを目立たせる */}
+        <AppButton
+          variant={cleared && links.nextHref ? "primary" : "cta"}
+          size={cleared && links.nextHref ? "lg" : "xl"}
+          onClick={onRetry}
+        >
+          もういちど
+        </AppButton>
         <Link href={links.backHref} className={appButtonVariants({ variant: "cream", size: "lg" })}>
           もどる
         </Link>
