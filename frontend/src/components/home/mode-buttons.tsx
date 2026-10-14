@@ -21,8 +21,8 @@ export function ModeButtons({ stars }: { stars: StarMap }) {
     if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
-  function showChallengeNotice() {
-    setNotice(challengeOpen ? "もうすぐ あそべるよ！" : `★を ${CHALLENGE_UNLOCK_STARS}こ あつめると ひらくよ`);
+  function showLockedNotice() {
+    setNotice(`★を ${CHALLENGE_UNLOCK_STARS}こ あつめると ひらくよ`);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => setNotice(null), NOTICE_MS);
   }
@@ -41,15 +41,19 @@ export function ModeButtons({ stars }: { stars: StarMap }) {
           </Link>
         );
       })}
-      <button
-        type="button"
-        onClick={showChallengeNotice}
-        className={cn(appButtonVariants({ variant: challengeOpen ? "warning" : "locked" }), TILE)}
-      >
-        <Timer className="h-6 w-6" />
-        チャレンジ
-        <span className="text-[10px]">{challengeOpen ? "ひらいた！" : `★${CHALLENGE_UNLOCK_STARS}で ひらくよ`}</span>
-      </button>
+      {challengeOpen ? (
+        <Link href="/challenge" className={cn(appButtonVariants({ variant: "warning" }), TILE)}>
+          <Timer className="h-6 w-6" />
+          チャレンジ
+          <span className="text-[10px]">60びょう</span>
+        </Link>
+      ) : (
+        <button type="button" onClick={showLockedNotice} className={cn(appButtonVariants({ variant: "locked" }), TILE)}>
+          <Timer className="h-6 w-6" />
+          チャレンジ
+          <span className="text-[10px]">★{CHALLENGE_UNLOCK_STARS}で ひらくよ</span>
+        </button>
+      )}
       {notice && (
         <p
           role="status"
