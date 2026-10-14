@@ -10,23 +10,34 @@ import { StageCard } from "@/components/mode/stage-card";
 import { StageGrid } from "@/components/mode/stage-grid";
 import { MODES, playPath, stagesOfMode, type ModeId } from "@/data/stages/catalog";
 import { initialFocusStage, isUnlocked, starsOf } from "@/lib/game/progression";
-import { modeHref, type ModeSearch } from "@/lib/mode-params";
+import type { Stars } from "@/lib/game/stars";
+import { modeHref, parseModeSearchParams, type ModeSearch } from "@/lib/mode-params";
 import { useProgress } from "@/lib/progress-store";
 
-export function ModeScreen({ modeId, requestedStageId, grewStageId, grewFrom }: { modeId: ModeId } & ModeSearch) {
+/**
+ * grew はサーバーからの props ではなく今の URL から読む。
+ * props で受けると、replaceState で URL から消しても「戻る」で Next が前の props のまま画面を作り直し、演出がくり返される。
+ */
+function readGrewFromLocation(modeId: ModeId): { stageId: string; from: Stars } | undefined {
+  const search = parseModeSearchParams(modeId, Object.fromEntries(new URLSearchParams(window.location.search)));
+  return search.grewStageId ? { stageId: search.grewStageId, from: search.grewFrom ?? 0 } : undefined;
+}
+
+export function ModeScreen({ modeId, requestedStageId }: { modeId: ModeId } & Pick<ModeSearch, "requestedStageId">) {
   const router = useRouter();
   const { play } = useSound();
   const { stars } = useProgress();
   const stages = stagesOfMode(modeId);
   const [focusedId, setFocusedId] = useState(() => initialFocusStage(modeId, stars, requestedStageId).id);
-  const [grew] = useState(() => (grewStageId ? { stageId: grewStageId, from: grewFrom ?? 0 } : undefined));
+  // この画面は ssr: false でだけ描くので、初期値で window を見てよい
+  const [grew] = useState(() => readGrewFromLocation(modeId));
 
-  // 戻る・再読み込みで育つ演出がくり返されないよう、URL から grew を消す（画面は作り直さない）
+  // 再読み込みで演出がくり返されないよう、URL から grew を消す（画面は作り直さない）
   useEffect(() => {
-    if (grewStageId) {
-      window.history.replaceState(null, "", modeHref(modeId, { stageId: requestedStageId }));
+    if (grew) {
+      window.history.replaceState(window.history.state, "", modeHref(modeId, { stageId: requestedStageId }));
     }
-  }, [grewStageId, modeId, requestedStageId]);
+  }, [grew, modeId, requestedStageId]);
 
   const index = stages.findIndex((stage) => stage.id === focusedId);
   const stage = stages[index];

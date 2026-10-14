@@ -13,7 +13,7 @@ export default async function ModePage({
 }) {
   const { modeId } = await params;
   if (!isModeId(modeId)) notFound();
-  const search = parseModeSearchParams(modeId, await searchParams);
-  // あそびを切り替えたら、選んでいるステージを引き継がずに作り直す
-  return <ModeScreenLoader key={modeId} modeId={modeId} {...search} />;
+  const { requestedStageId } = parseModeSearchParams(modeId, await searchParams);
+  // あそびを切り替えたら、選んでいるステージを引き継がずに作り直す（grew は画面側で URL から読む）
+  return <ModeScreenLoader key={modeId} modeId={modeId} requestedStageId={requestedStageId} />;
 }

@@ -17,15 +17,23 @@ export function createLocalStore<T>(key: string, parse: (raw: string | null) => 
   const eventName = `tane:store-changed:${key}`;
   let cachedRaw: string | null | undefined;
   let cachedValue: T = fallback;
+  // 保存できない環境（Cookieのブロック・容量いっぱいなど）でも、今の画面の中では遊び続けられるようにメモリに持つ
+  let memoryRaw: string | null = null;
+  let useMemory = false;
+
+  function readRaw(): string | null {
+    if (useMemory) return memoryRaw;
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      useMemory = true;
+      return memoryRaw;
+    }
+  }
 
   function read(): T {
     if (typeof window === "undefined") return fallback;
-    let raw: string | null = null;
-    try {
-      raw = window.localStorage.getItem(key);
-    } catch {
-      raw = null;
-    }
+    const raw = readRaw();
     if (raw === cachedRaw) return cachedValue;
     cachedRaw = raw;
     cachedValue = parse(raw);
@@ -37,19 +45,21 @@ export function createLocalStore<T>(key: string, parse: (raw: string | null) => 
   }
 
   function write(value: T) {
+    memoryRaw = JSON.stringify(value);
     try {
-      window.localStorage.setItem(key, JSON.stringify(value));
+      window.localStorage.setItem(key, memoryRaw);
     } catch {
-      // 保存できない環境（プライベートブラウズなど）では、今の画面の中だけで遊べればよい
+      useMemory = true;
     }
     notify();
   }
 
   function remove() {
+    memoryRaw = null;
     try {
       window.localStorage.removeItem(key);
     } catch {
-      // 同上
+      useMemory = true;
     }
     notify();
   }

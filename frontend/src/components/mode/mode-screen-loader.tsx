@@ -11,6 +11,6 @@ const ModeScreen = dynamic(() => import("@/components/mode/mode-screen").then((m
   loading: () => <div className="flex-1" />,
 });
 
-export function ModeScreenLoader(props: { modeId: ModeId } & ModeSearch) {
+export function ModeScreenLoader(props: { modeId: ModeId } & Pick<ModeSearch, "requestedStageId">) {
   return <ModeScreen {...props} />;
 }
