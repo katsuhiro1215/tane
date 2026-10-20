@@ -25,13 +25,17 @@ export function SeedFieldView({
   color,
   onTap,
   disabled,
+  single = false,
 }: {
   seeds: readonly Seed[];
   blooms: readonly Bloom[];
   color: SpruColor;
   onTap: (seedId: number) => void;
   disabled: boolean;
+  /** 1問ずつ出すあそび。大きな問題を真ん中に出し、答えは下のテンキーのOKで出す */
+  single?: boolean;
 }) {
+  if (single) return <SingleProblemView seeds={seeds} blooms={blooms} color={color} />;
   return (
     <div
       data-testid="seed-field"
@@ -66,6 +70,34 @@ export function SeedFieldView({
           <span className="px-1 text-center whitespace-nowrap">{seed.problem.text}</span>
         </button>
       ))}
+    </div>
+  );
+}
+
+function SingleProblemView({ seeds, blooms, color }: { seeds: readonly Seed[]; blooms: readonly Bloom[]; color: SpruColor }) {
+  const seed = seeds[0];
+  return (
+    <div
+      data-testid="seed-field"
+      className="relative mx-4 flex min-h-56 flex-1 flex-col items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-b from-[#dff3ff] to-[#f4fbe6]"
+    >
+      <div aria-hidden className="absolute inset-x-0 bottom-0 h-3 bg-[#8fce6a]" />
+      {blooms.map((bloom) => (
+        <span key={bloom.key} aria-hidden className="pointer-events-none absolute top-6 animate-grow-in">
+          <Image src={growthImage(color, "flower")} alt="" width={96} height={120} className="h-24 w-auto object-contain" />
+        </span>
+      ))}
+      {seed && (
+        <p
+          key={seed.id}
+          data-testid="seed"
+          data-answer={seed.problem.answer}
+          aria-label={seed.problem.text}
+          className="animate-pop-in rounded-3xl border-b-4 border-[#5e3a17] bg-[#9a6a35] px-6 py-5 text-center font-display text-4xl font-black whitespace-nowrap text-white shadow-md"
+        >
+          {seed.problem.text}
+        </p>
+      )}
     </div>
   );
 }

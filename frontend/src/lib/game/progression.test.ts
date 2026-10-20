@@ -25,8 +25,8 @@ describe("しそくえんざん（★5・★3で次が開く）", () => {
   });
 
   it("★の合計の最大は、1ステージ5で数える", () => {
-    expect(modeStarSummary("shisoku", {})).toEqual({ earned: 0, max: 60 });
-    expect(modeStarSummary("shisoku", { "shisoku-1": 5, "shisoku-2": 4 })).toEqual({ earned: 9, max: 60 });
+    expect(modeStarSummary("shisoku", {})).toEqual({ earned: 0, max: 100 });
+    expect(modeStarSummary("shisoku", { "shisoku-1": 5, "shisoku-2": 4 })).toEqual({ earned: 9, max: 100 });
   });
 });
 
@@ -83,13 +83,13 @@ describe("continueTarget（設計書3.5）", () => {
 
   it("3. そのあそびが全部★3なら、次のあそびへ（フラッシュの次は、まだ遊んでいないしそくえんざん）", () => {
     expect(continueTarget(cleared("flash", 6), "flash").id).toBe("shisoku-1");
-    expect(continueTarget({ ...cleared("flash", 6), ...cleared("shisoku", 12, 5) } as StarMap, "flash").id).toBe("add-1");
+    expect(continueTarget({ ...cleared("flash", 6), ...cleared("shisoku", 20, 5) } as StarMap, "flash").id).toBe("add-1");
     expect(continueTarget(cleared("add", 12), "add").id).toBe("sub-1");
   });
 
   it("4. 全部★3なら、最後に遊んだあそびのボス", () => {
     const all = Object.assign(
-      { ...cleared("shisoku", 12, 5) },
+      { ...cleared("shisoku", 20, 5) },
       ...(["add", "sub", "mul", "div", "flash"] as const).map((m) => cleared(m, 12))
     ) as StarMap;
     expect(continueTarget(all, "mul").id).toBe("mul-12");
@@ -134,7 +134,7 @@ describe("そろばん（設計書2.3・2.4）", () => {
   });
 
   it("そろばんは、最後に遊んだあそびのときだけ続きを探す（四則演算・フラッシュは飛ばない）", () => {
-    expect(continueTarget({ ...cleared("flash", 6), ...cleared("shisoku", 12, 5) } as StarMap, "flash").id).toBe("add-1");
+    expect(continueTarget({ ...cleared("flash", 6), ...cleared("shisoku", 20, 5) } as StarMap, "flash").id).toBe("add-1");
     expect(continueTarget({}, undefined).id).toBe("add-1");
   });
 

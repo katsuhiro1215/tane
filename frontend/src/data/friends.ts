@@ -99,6 +99,14 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "shisoku-10": { name: "ハカリ", line: "どっちも ばっちりだよ" },
   "shisoku-11": { name: "チャポ", line: "くりあがりも くりさがりも！" },
   "shisoku-12": { name: "マゼロ", line: "1けたなら なんでも こい！" },
+  "shisoku-13": { name: "ハテナ", line: "？に はいる かずは なにかな" },
+  "shisoku-14": { name: "ナゾロ", line: "ひみつの かずを みつけよう" },
+  "shisoku-15": { name: "カクレ", line: "かくれてる かずを さがそう" },
+  "shisoku-16": { name: "サガシ", line: "くりあがりの？も おまかせ！" },
+  "shisoku-17": { name: "ウラル", line: "ひきざんの？は ひっくり かえそう" },
+  "shisoku-18": { name: "ヒソム", line: "こっそり かくれた かずだよ" },
+  "shisoku-19": { name: "ノゾキ", line: "のぞいて みつけちゃおう！" },
+  "shisoku-20": { name: "スケル", line: "ぜんぶ みえる めいたんてい！" },
 };
 
 // 色の呼び名は設計書の付録B

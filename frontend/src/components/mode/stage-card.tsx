@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Crown, Lock } from "lucide-react";
 import { AppButton } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { StarsRow } from "@/components/app/stars-row";
+import { roundLabel, SEED_ROUND_MS } from "@/lib/game/seed-stars";
 import { displayNumber, maxStars, problemCount, type Stage } from "@/data/stages/catalog";
 import type { Stars } from "@/lib/game/stars";
 import { SPRU_POSES, STAGE_BADGES } from "@/lib/spru-images";
@@ -43,7 +44,7 @@ export function StageCard({ stage, total, stars, unlocked, onPrev, onNext, onSta
         {stage.name}
       </h2>
       <p className="text-center text-sm font-bold text-muted-foreground">
-        {stage.description} ・ {stage.kind === "seed" ? "1ぷん / エンドレス" : `${problemCount(stage)}もん`}
+        {stage.description} ・ {stage.kind === "seed" ? `${roundLabel(stage.rule.roundMs ?? SEED_ROUND_MS)} / エンドレス` : `${problemCount(stage)}もん`}
       </p>
       <p className="mt-1 text-center">
         <StarsRow stars={stars} max={maxStars(stage)} />

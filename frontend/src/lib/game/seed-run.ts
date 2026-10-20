@@ -8,6 +8,8 @@ export type SeedRunStatus = "playing" | "timeup" | "defeated";
 /** 1回の遊び（1分またはエンドレス）の状態。点数・ゲージ・フィーバーは PlaySession が持つ */
 export interface SeedRun {
   mode: SeedRunMode;
+  /** 1問ずつ出すあそびか（違う答えを出した問題は、次に進む） */
+  single: boolean;
   status: SeedRunStatus;
   field: SeedField;
   hp: number;
@@ -24,6 +26,7 @@ export type SeedEvent = { kind: "correct"; seed: Seed } | { kind: "miss"; cause:
 export function createRun(config: SeedFieldConfig, mode: SeedRunMode, rng: () => number = Math.random): SeedRun {
   return {
     mode,
+    single: config.single === true,
     status: "playing",
     field: createField(config, rng),
     hp: INITIAL_HP,
@@ -56,7 +59,7 @@ export function stepRun(
     next = miss(next);
     events.push({ kind: "miss", cause: "landed" });
   }
-  if (next.status === "playing" && next.mode === "minute" && next.playedMs >= SEED_ROUND_MS) {
+  if (next.status === "playing" && next.mode === "minute" && next.playedMs >= (config.roundMs ?? SEED_ROUND_MS)) {
     next = { ...next, status: "timeup" };
   }
   return { run: next, events };
@@ -67,7 +70,11 @@ export function tapRun(run: SeedRun, seedId: number, input: number): { run: Seed
   if (run.status !== "playing") return { run, events: [] };
   const tapped = tapSeed(run.field, seedId, input);
   if (tapped.result === "none" || !tapped.seed) return { run, events: [] };
-  if (tapped.result === "wrong") return { run: miss(run), events: [{ kind: "miss", cause: "wrong" }] };
+  if (tapped.result === "wrong") {
+    // 1問ずつのあそびは、同じ問題で何度も試せないように、間違えたら次の問題に進む
+    const field = run.single ? { ...run.field, seeds: run.field.seeds.filter((s) => s.id !== seedId) } : run.field;
+    return { run: miss({ ...run, field }), events: [{ kind: "miss", cause: "wrong" }] };
+  }
   const combo = run.combo + 1;
   return {
     run: { ...run, field: tapped.field, correct: run.correct + 1, combo, maxCombo: Math.max(run.maxCombo, combo) },

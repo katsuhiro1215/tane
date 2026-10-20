@@ -100,3 +100,24 @@ describe("stepRun", () => {
     expect(stepRun(run, MAX_TICK_MS, config)).toEqual({ run, events: [] });
   });
 });
+
+describe("single（1問ずつ）と制限時間", () => {
+  const single: SeedFieldConfig = { ...config, single: true, roundMs: 120_000 };
+
+  it("違う答えは、ミスにして次の問題に進む（同じ問題で何度も試せない）", () => {
+    const run = createRun(single, "minute");
+    const seed = run.field.seeds[0];
+    const out = tapRun(run, seed.id, seed.problem.answer + 1);
+    expect(out.events).toEqual([{ kind: "miss", cause: "wrong" }]);
+    expect(out.run.field.seeds.find((s) => s.id === seed.id)).toBeUndefined();
+    expect(stepRun(out.run, MAX_TICK_MS, single).run.field.seeds).toHaveLength(1);
+  });
+
+  it("放っておいてもミスにならない。2分で timeup", () => {
+    let run = createRun(single, "minute");
+    for (let t = 0; t < 119_900; t += MAX_TICK_MS) run = stepRun(run, MAX_TICK_MS, single).run;
+    expect(run).toMatchObject({ status: "playing", mistakes: 0, hp: INITIAL_HP });
+    run = stepRun(run, MAX_TICK_MS, single).run;
+    expect(run.status).toBe("timeup");
+  });
+});

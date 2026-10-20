@@ -118,3 +118,22 @@ describe("tapSeed", () => {
     expect(ok.field.seeds.find((s) => s.id === seed.id)).toBeUndefined();
   });
 });
+
+describe("single（1問ずつ出す）", () => {
+  const single: SeedFieldConfig = { ...config, single: true, simultaneous: 3 };
+
+  it("種は1個だけで、時間がたっても降りない", () => {
+    let field = createField(single);
+    for (let t = 0; t < 120_000; t += MAX_TICK_MS) field = tick(field, MAX_TICK_MS, single, 0).field;
+    expect(field.seeds).toHaveLength(1);
+    expect(field.seeds[0].progress).toBe(0);
+    expect(field.seeds[0].ageMs).toBeGreaterThan(100_000);
+  });
+
+  it("答えたら、待たずに次の問題が出る", () => {
+    const field = createField(single);
+    const seed = field.seeds[0];
+    const answered = tapSeed(field, seed.id, seed.problem.answer).field;
+    expect(tick(answered, MAX_TICK_MS, single, 0).field.seeds).toHaveLength(1);
+  });
+});

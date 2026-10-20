@@ -66,7 +66,14 @@ export function SeedPlayer({ stageId }: { stageId: string }) {
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const config: SeedFieldConfig | null = stage
-    ? { rule: stage.rule.rule, fallMs: stage.rule.fallMs, simultaneous: stage.rule.simultaneous }
+    ? {
+        rule: stage.rule.rule,
+        fallMs: stage.rule.fallMs,
+        simultaneous: stage.rule.simultaneous,
+        single: stage.rule.single,
+        blank: stage.rule.blank,
+        roundMs: stage.rule.roundMs,
+      }
     : null;
   const speed = useSpeedPlay({
     secondsPerProblem: stage ? stage.rule.fallMs / 1000 : 1,
@@ -240,7 +247,7 @@ export function SeedPlayer({ stageId }: { stageId: string }) {
 
   const inFever = speed.session.feverLeft > 0;
   const live = run;
-  const leftSec = live && mode === "minute" ? Math.max(0, Math.ceil((SEED_ROUND_MS - live.playedMs) / 1000)) : null;
+  const leftSec = live && mode === "minute" ? Math.max(0, Math.ceil(((config.roundMs ?? SEED_ROUND_MS) - live.playedMs) / 1000)) : null;
   const playing = phase === "playing";
 
   return (
@@ -286,6 +293,7 @@ export function SeedPlayer({ stageId }: { stageId: string }) {
         seeds={live && playing ? live.field.seeds : []}
         blooms={blooms}
         color={current.color}
+        single={config.single === true}
         onTap={tap}
         disabled={!playing}
       />

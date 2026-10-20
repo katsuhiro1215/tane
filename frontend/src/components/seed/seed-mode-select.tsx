@@ -7,6 +7,7 @@ import type { SeedStage } from "@/data/stages/catalog";
 import type { Stars } from "@/lib/game/stars";
 import type { SeedRunMode } from "@/lib/game/seed-run";
 import { displayNumber } from "@/data/stages/catalog";
+import { roundLabel, SEED_ROUND_MS } from "@/lib/game/seed-stars";
 import { modeHref } from "@/lib/mode-params";
 
 export function SeedModeSelect({
@@ -29,7 +30,7 @@ export function SeedModeSelect({
       </Panel>
       <div className="flex flex-col gap-3">
         <AppButton variant="cta" size="xl" onClick={() => onSelect("minute")}>
-          1ぷん ちょうせん
+          {roundLabel(stage.rule.roundMs ?? SEED_ROUND_MS)} ちょうせん
         </AppButton>
         <p className="-mt-1 text-center text-xs font-bold text-muted-foreground">せいかいの かずで ★が きまるよ</p>
         <AppButton variant="primary" size="lg" onClick={() => onSelect("endless")}>

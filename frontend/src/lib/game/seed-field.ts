@@ -1,5 +1,5 @@
 import type { ArithmeticRule } from "@/lib/game/problem-rules";
-import { drawSeedProblem, type SeedProblem } from "@/lib/game/seed-problems";
+import { drawBlankSeedProblem, drawSeedProblem, type SeedProblem } from "@/lib/game/seed-problems";
 
 // 数値はすべて初期値。遊んでみて調整する（設計書 4.3）
 export const MAX_TICK_MS = 100;
@@ -12,6 +12,12 @@ export interface SeedFieldConfig {
   rule: ArithmeticRule;
   fallMs: number;
   simultaneous: 2 | 3;
+  /** 1問ずつ出す。降らず、時間では失敗にならない（虫食いなど、考える問題用） */
+  single?: boolean;
+  /** 虫食いの問題にする */
+  blank?: boolean;
+  /** 1回の制限時間（1分モード）。省略は60秒 */
+  roundMs?: number;
 }
 
 export interface Seed {
@@ -36,7 +42,8 @@ function spawn(field: SeedField, config: SeedFieldConfig, rng: Rng): SeedField {
   const free = Array.from({ length: SEED_LANES }, (_, lane) => lane).filter((lane) => !taken.has(lane));
   if (free.length === 0) return field;
   const lane = free[Math.floor(rng() * free.length)];
-  const problem = drawSeedProblem(
+  const draw = config.blank ? drawBlankSeedProblem : drawSeedProblem;
+  const problem = draw(
     config.rule,
     { answers: field.seeds.map((s) => s.problem.answer), texts: field.seeds.map((s) => s.problem.text) },
     rng
@@ -64,7 +71,12 @@ export function tick(
 ): { field: SeedField; landed: Seed[] } {
   const dt = Math.min(Math.max(dtMs, 0), MAX_TICK_MS);
   const fall = fallMsFor(config, combo);
-  const moved = field.seeds.map((seed) => ({ ...seed, ageMs: seed.ageMs + dt, progress: seed.progress + dt / fall }));
+  // single のときは降らない（progress は0のまま）。経過時間だけ数える
+  const moved = field.seeds.map((seed) => ({
+    ...seed,
+    ageMs: seed.ageMs + dt,
+    progress: config.single ? 0 : seed.progress + dt / fall,
+  }));
   const landed = moved.filter((seed) => seed.progress >= 1);
   let next: SeedField = {
     seeds: moved.filter((seed) => seed.progress < 1),
@@ -73,7 +85,8 @@ export function tick(
   };
   // 画面が空になったら待たずに出す。そうでなければ間隔が空いてから
   const due = next.seeds.length === 0 || next.sinceSpawnMs >= SPAWN_GAP_MS;
-  if (next.seeds.length < config.simultaneous && due) next = spawn(next, config, rng);
+  const wanted = config.single ? 1 : config.simultaneous;
+  if (next.seeds.length < wanted && due) next = spawn(next, config, rng);
   return { field: next, landed };
 }
 

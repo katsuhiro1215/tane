@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { starsForSeedRun, type SeedThresholds } from "@/lib/game/seed-stars";
+import { roundLabel, starsForSeedRun, type SeedThresholds } from "@/lib/game/seed-stars";
 
 const t: SeedThresholds = [8, 14, 20, 26, 32];
 const stars = (correct: number, mistakes = 0, defeated = false) =>
@@ -26,4 +26,9 @@ describe("starsForSeedRun", () => {
   it("HPが0で終わったら0", () => {
     expect(stars(40, 0, true)).toBe(0);
   });
+});
+
+it("roundLabel は 1ぷん / 2ふん と読む", () => {
+  expect(roundLabel(60_000)).toBe("1ぷん");
+  expect(roundLabel(120_000)).toBe("2ふん");
 });
