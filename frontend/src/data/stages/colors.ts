@@ -6,6 +6,22 @@ export const SPRU_COLORS = [
   "ruru",
   "saku",
   "lavi",
+  "piko",
+  "rosa",
+  "fuji",
+  "lili",
+  "higa",
+  "mira",
+  "tuli",
+  "nemu",
+  "dali",
+  "iris",
+  "nera",
+  "coco",
+  "mari",
+  "vio",
+  "mimo",
+  "came",
   "emerald",
   "gold",
   "amber",
@@ -21,7 +37,10 @@ export const SPRU_COLORS = [
 export type SpruColor = (typeof SPRU_COLORS)[number];
 
 /** ふだんのなかま。ステージの最初のほうは、ノーマルから出す */
-export const NORMAL_COLORS: readonly SpruColor[] = ["spru", "lumi", "momo", "kuru", "ruru", "saku", "lavi"];
+export const NORMAL_COLORS: readonly SpruColor[] = [
+  "spru", "lumi", "momo", "kuru", "ruru", "saku", "lavi",
+  "piko", "rosa", "fuji", "lili", "higa", "mira", "tuli", "nemu", "dali", "iris", "nera", "coco", "mari", "vio", "mimo", "came",
+];
 
 /** レア（宝石の色）。5つ目のステージから混ぜる */
 export const RARE_COLORS: readonly SpruColor[] = ["emerald", "gold", "amber", "ruby", "sapphire", "pearl", "silver"];
