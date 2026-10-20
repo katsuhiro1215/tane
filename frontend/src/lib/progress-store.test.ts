@@ -7,6 +7,7 @@ import {
   PROGRESS_KEY,
   readProgress,
   recordChallengeResult,
+  recordEndlessResult,
   recordStageResult,
   rememberLastMode,
   resetProgress,
@@ -27,14 +28,14 @@ describe("parseProgress", () => {
 
   it("★は1〜3の整数だけ、知らないステージidは捨てる", () => {
     const raw = JSON.stringify({ stars: { "add-1": 3, "add-2": 0, "add-3": 4, "add-4": "2", "zzz-1": 3, "flash-6": 2 }, titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 3, "flash-6": 2 }, best: {}, challengeBest: {}, garden: [], titleSeen: true });
+    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 3, "flash-6": 2 }, best: {}, challengeBest: {}, endless: {}, garden: [], titleSeen: true });
   });
 
   it("lastModeId は知っているあそびだけ、titleSeen は true のときだけ", () => {
     expect(parseProgress(JSON.stringify({ stars: {}, lastModeId: "mul", titleSeen: "yes" }))).toEqual({
       stars: {},
       best: {},
-      challengeBest: {},
+      challengeBest: {}, endless: {},
       garden: [],
       lastModeId: "mul",
       titleSeen: false,
@@ -49,7 +50,7 @@ describe("parseProgress", () => {
 
   it("分割1の記録（best が無い）も★を残して読める", () => {
     const raw = JSON.stringify({ stars: { "add-1": 2 }, lastModeId: "add", titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 2 }, best: {}, challengeBest: {}, garden: [], lastModeId: "add", titleSeen: true });
+    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 2 }, best: {}, challengeBest: {}, endless: {}, garden: [], lastModeId: "add", titleSeen: true });
   });
 
   it("challengeBest は知っているチャレンジのあそびの、0以上の整数だけ", () => {
@@ -81,8 +82,23 @@ describe("parseProgress", () => {
   it("challengeBest が無い・形が違う記録は空で、★は残る", () => {
     expect(parseProgress(JSON.stringify({ stars: { "add-1": 1 }, challengeBest: [1, 2] }))).toMatchObject({
       stars: { "add-1": 1 },
-      challengeBest: {},
+      challengeBest: {}, endless: {},
     });
+  });
+});
+
+describe("★5とエンドレスの記録", () => {
+  it("★はそのステージの最大まで。しそくえんざんは5、ほかは3", () => {
+    const raw = JSON.stringify({ stars: { "shisoku-1": 5, "shisoku-2": 6, "add-1": 5, "add-2": 3 } });
+    expect(parseProgress(raw).stars).toEqual({ "shisoku-1": 5, "add-2": 3 });
+  });
+
+  it("endless は正の整数だけ、知っているステージだけ。無い古い記録は空", () => {
+    const raw = JSON.stringify({
+      endless: { "shisoku-1": { correct: 12, combo: 7 }, "zzz-1": { correct: 1, combo: 1 }, "shisoku-2": { correct: -1, combo: 2 }, "shisoku-3": "x" },
+    });
+    expect(parseProgress(raw).endless).toEqual({ "shisoku-1": { correct: 12, combo: 7 } });
+    expect(parseProgress(JSON.stringify({ stars: {} })).endless).toEqual({});
   });
 });
 
@@ -189,6 +205,13 @@ describe("localStorage への読み書き", () => {
     recordStageResult("add-1", 2, 900);
     expect(recordStageResult("add-1", 0)).toEqual({ improved: false, before: 2, newBest: false, bestBefore: 900 });
     expect(readProgress().best).toEqual({ "add-1": 900 });
+  });
+
+  it("recordEndlessResult は正解数と最長コンボを、それぞれ大きいほうだけ残す", () => {
+    expect(recordEndlessResult("shisoku-1", 10, 5)).toEqual({ newBestCorrect: true, newBestCombo: true });
+    expect(recordEndlessResult("shisoku-1", 8, 9)).toEqual({ newBestCorrect: false, newBestCombo: true });
+    expect(recordEndlessResult("shisoku-1", 12, 4)).toEqual({ newBestCorrect: true, newBestCombo: false });
+    expect(readProgress().endless["shisoku-1"]).toEqual({ correct: 12, combo: 9 });
   });
 
   it("保存すると古いキーを消す", () => {
