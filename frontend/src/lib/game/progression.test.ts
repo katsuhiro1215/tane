@@ -94,6 +94,43 @@ describe("initialFocusStage", () => {
   });
 });
 
+describe("そろばん（設計書2.3・2.4）", () => {
+  it("どの級もみとりざんが初めから開き、級の中は順番", () => {
+    expect(isUnlocked(getStage("soroban-15")!, {})).toBe(true);
+    expect(isUnlocked(getStage("soroban-1")!, {})).toBe(true);
+    expect(isUnlocked(getStage("soroban-16")!, {})).toBe(false);
+    expect(isUnlocked(getStage("soroban-16")!, { "soroban-15": 1 })).toBe(true);
+  });
+
+  it("初めて開くと10級のみとりざん", () => {
+    expect(initialFocusStage("soroban", {}).id).toBe("soroban-1");
+  });
+
+  it("いちばん上の級の続きを選ぶ", () => {
+    expect(initialFocusStage("soroban", { "soroban-1": 3, "soroban-15": 2 }).id).toBe("soroban-16");
+    const all6 = { "soroban-15": 3, "soroban-16": 3, "soroban-17": 3, "soroban-18": 3 } as const;
+    expect(initialFocusStage("soroban", all6).id).toBe("soroban-19");
+  });
+
+  it("級が全部★1以上なら、★3でない最初のステージ", () => {
+    const stars = { "soroban-15": 1, "soroban-16": 3, "soroban-17": 3, "soroban-18": 3 } as const;
+    expect(initialFocusStage("soroban", stars).id).toBe("soroban-15");
+  });
+
+  it("そろばんは、最後に遊んだあそびのときだけ続きを探す（四則演算・フラッシュは飛ばない）", () => {
+    expect(continueTarget(cleared("flash", 6), "flash").id).toBe("add-1");
+    expect(continueTarget({}, undefined).id).toBe("add-1");
+  });
+
+  it("つづきからも同じ決め方", () => {
+    expect(continueTarget({ "soroban-15": 2 }, "soroban").id).toBe("soroban-16");
+  });
+
+  it("要求されたステージ（URL）があればそれを優先する", () => {
+    expect(initialFocusStage("soroban", {}, "soroban-23").id).toBe("soroban-23");
+  });
+});
+
 describe("gardenFriends", () => {
   it("★1以上だけを★の多い順、同じなら後ろのステージから、最大8体", () => {
     const stars: StarMap = { "add-1": 1, "add-2": 3, "add-3": 3, "sub-1": 2 };

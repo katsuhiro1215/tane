@@ -6,6 +6,7 @@ import {
   MODE_IDS,
   nextStageInMode,
   playPath,
+  problemCount,
   SECONDS_PER_PROBLEM,
   STAGES,
   stagesOfMode,
@@ -20,19 +21,19 @@ const N = 2000;
 const arithmetic = STAGES.filter((s): s is Extract<Stage, { kind: "arithmetic" }> => s.kind === "arithmetic");
 
 describe("ステージの数とid", () => {
-  it("全部で54、あそびごとに12・12・12・12・6", () => {
-    expect(STAGES).toHaveLength(54);
-    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6]);
+  it("全部で80、あそびごとに12・12・12・12・6・26", () => {
+    expect(STAGES).toHaveLength(80);
+    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26]);
   });
 
   it("idは `<あそび>-<番号>` で重複しない", () => {
     const ids = STAGES.map((s) => s.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const s of STAGES) expect(s.id).toBe(`${s.mode}-${s.number}`);
+    for (const s of STAGES) expect(s.id).toBe(s.mode === "soroban" ? `soroban-${s.number}` : `${s.mode}-${s.number}`);
   });
 
-  it("各あそびの最後だけがボス", () => {
-    for (const mode of MODE_IDS) {
+  it("各あそびの最後だけがボス（そろばんは各級のもぎけんてい）", () => {
+    for (const mode of MODE_IDS.filter((m) => m !== "soroban")) {
       const list = stagesOfMode(mode);
       expect(list.map((s) => s.isBoss)).toEqual(list.map((_, i) => i === list.length - 1));
     }
@@ -42,8 +43,46 @@ describe("ステージの数とid", () => {
     for (const s of STAGES) expect(SPRU_COLORS).toContain(s.color);
   });
 
-  it("フラッシュだけが kind: flash", () => {
-    for (const s of STAGES) expect(s.kind).toBe(s.mode === "flash" ? "flash" : "arithmetic");
+  it("kind は、フラッシュが flash、そろばんが soroban、ほかが arithmetic", () => {
+    for (const s of STAGES) {
+      expect(s.kind).toBe(s.mode === "flash" ? "flash" : s.mode === "soroban" ? "soroban" : "arithmetic");
+    }
+  });
+});
+
+describe("そろばんのステージ（設計書2.2）", () => {
+  const soroban = stagesOfMode("soroban");
+
+  it("10級→4級、級の中は みとり・かけ・（わり）・もぎ", () => {
+    const keys = soroban.map((s) => (s.kind === "soroban" ? `${s.grade}${s.event}` : "?"));
+    expect(keys).toEqual([
+      "10mitori", "10kake", "10mogi",
+      "9mitori", "9kake", "9mogi",
+      "8mitori", "8kake", "8wari", "8mogi",
+      "7mitori", "7kake", "7wari", "7mogi",
+      "6mitori", "6kake", "6wari", "6mogi",
+      "5mitori", "5kake", "5wari", "5mogi",
+      "4mitori", "4kake", "4wari", "4mogi",
+    ]);
+  });
+
+  it("名前・説明・ボス", () => {
+    expect(getStage("soroban-15")).toMatchObject({ grade: 6, event: "mitori", name: "6きゅう みとりざん", description: "3けた・10口" });
+    expect(getStage("soroban-16")).toMatchObject({ name: "6きゅう かけざん", description: "あわせて 5けた" });
+    expect(getStage("soroban-3")).toMatchObject({ name: "10きゅう もぎけんてい", description: "みとり・かけ", isBoss: true });
+    expect(getStage("soroban-18")).toMatchObject({ description: "みとり・かけ・わり", isBoss: true });
+    expect(getStage("soroban-15")?.isBoss).toBe(false);
+  });
+
+  it("問題数と目標タイム", () => {
+    expect(problemCount(getStage("soroban-15")!)).toBe(10);
+    expect(problemCount(getStage("add-1")!)).toBe(20);
+    expect(targetMs(getStage("soroban-15")!)).toBe(180_000);
+    expect(targetMs(getStage("add-1")!)).toBe(80_000);
+  });
+
+  it("プレイのURLは /soroban/<id>", () => {
+    expect(playPath(getStage("soroban-1")!)).toBe("/soroban/soroban-1");
   });
 });
 
@@ -119,6 +158,7 @@ describe("目安の秒数と目標タイム（設計書2.5）", () => {
       mul: [4, 4, 4, 4, 4, 4, 5, 7, 7, 10, 12, 9],
       div: [5, 5, 5, 5, 5, 6, 8, 10, 12, 9, 14, 10],
       flash: [5, 5, 5, 6, 5, 8],
+      soroban: [],
     });
   });
 
