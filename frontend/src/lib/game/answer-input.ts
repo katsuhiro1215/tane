@@ -1,10 +1,10 @@
 export const MAX_ANSWER_LENGTH = 4;
 
-export function appendDigit(current: string, digit: string): string {
+export function appendDigit(current: string, digit: string, maxLength: number = MAX_ANSWER_LENGTH): string {
   if (!/^[0-9]$/.test(digit)) {
     return current;
   }
-  if (current.length >= MAX_ANSWER_LENGTH) {
+  if (current.length >= maxLength) {
     return current;
   }
   return current + digit;

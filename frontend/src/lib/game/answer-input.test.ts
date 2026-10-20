@@ -42,3 +42,14 @@ describe("canSubmit", () => {
     expect(canSubmit("0")).toBe(true);
   });
 });
+
+describe("appendDigit の桁数の上限", () => {
+  it("上限を渡せる（そろばんは7けた）", () => {
+    expect(appendDigit("123456", "7", 7)).toBe("1234567");
+    expect(appendDigit("1234567", "8", 7)).toBe("1234567");
+  });
+
+  it("省略すると今までどおり4けた", () => {
+    expect(appendDigit("1234", "5")).toBe("1234");
+  });
+});

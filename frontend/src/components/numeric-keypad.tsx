@@ -9,11 +9,13 @@ interface NumericKeypadProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   disabled?: boolean;
+  /** 打てる桁数。省略は4けた */
+  maxLength?: number;
 }
 
 const DIGIT_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK"];
 
-export function NumericKeypad({ value, onChange, onSubmit, disabled }: NumericKeypadProps) {
+export function NumericKeypad({ value, onChange, onSubmit, disabled, maxLength }: NumericKeypadProps) {
   function handleKeyPress(key: string) {
     if (disabled) {
       return;
@@ -28,7 +30,7 @@ export function NumericKeypad({ value, onChange, onSubmit, disabled }: NumericKe
       }
       return;
     }
-    onChange(appendDigit(value, key));
+    onChange(appendDigit(value, key, maxLength));
   }
 
   return (
