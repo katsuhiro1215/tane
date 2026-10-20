@@ -10,7 +10,7 @@ import { COLOR_LABELS, FRIENDS } from "@/data/friends";
 import { playPath, type Stage } from "@/data/stages/catalog";
 import { favoriteText, nextGrowthText, unlockHint } from "@/lib/game/friends";
 import { isUnlocked, starsOf } from "@/lib/game/progression";
-import { growthForStars, type Growth } from "@/lib/game/stars";
+import { growthForStage, type Growth } from "@/lib/game/stars";
 import { toggleGarden, type Progress } from "@/lib/progress-store";
 import { GROWTHS, growthImage } from "@/lib/spru-images";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ export function FriendSheet({ stage, progress, onClose }: { stage: Stage; progre
   const inGarden = progress.garden.includes(stage.id);
   const unlocked = isUnlocked(stage, progress.stars);
   const best = progress.best[stage.id];
-  const current = growthForStars(stars);
+  const current = growthForStage(stage, stars);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -97,7 +97,7 @@ export function FriendSheet({ stage, progress, onClose }: { stage: Stage; progre
                 </li>
               ))}
             </ol>
-            <p className="font-display text-sm font-black text-[#2b6fa3]">{nextGrowthText(stars)}</p>
+            <p className="font-display text-sm font-black text-[#2b6fa3]">{nextGrowthText(stars, stage)}</p>
             <p className="rounded-2xl bg-muted/60 px-4 py-2 text-center font-display font-black">「{friend.line}」</p>
             <p className="text-xs font-bold">すきな けいさん: {favoriteText(stage)}</p>
             {best !== undefined && (

@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Crown, Lock } from "lucide-react";
 import { AppButton } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { StarsRow } from "@/components/app/stars-row";
-import { problemCount, type Stage } from "@/data/stages/catalog";
+import { displayNumber, maxStars, problemCount, type Stage } from "@/data/stages/catalog";
 import type { Stars } from "@/lib/game/stars";
 import { SPRU_POSES, STAGE_BADGES } from "@/lib/spru-images";
 
@@ -24,7 +24,11 @@ export function StageCard({ stage, total, stars, unlocked, onPrev, onNext, onSta
   return (
     <Panel className="relative mx-4 mt-7 pt-6">
       <span className="absolute -top-3 left-4 rounded-full bg-accent px-3 py-0.5 font-display text-xs font-black text-accent-foreground">
-        {stage.kind === "soroban" ? `${stage.grade}きゅう` : `ステージ ${stage.number} / ${total}`}
+        {stage.kind === "soroban"
+          ? `${stage.grade}きゅう`
+          : stage.kind === "seed"
+            ? `ステージ ${displayNumber(stage)}`
+            : `ステージ ${stage.number} / ${total}`}
       </span>
       <Image
         src={unlocked ? SPRU_POSES.cheer : STAGE_BADGES.locked}
@@ -39,10 +43,10 @@ export function StageCard({ stage, total, stars, unlocked, onPrev, onNext, onSta
         {stage.name}
       </h2>
       <p className="text-center text-sm font-bold text-muted-foreground">
-        {stage.description} ・ {problemCount(stage)}もん
+        {stage.description} ・ {stage.kind === "seed" ? "1ぷん / エンドレス" : `${problemCount(stage)}もん`}
       </p>
       <p className="mt-1 text-center">
-        <StarsRow stars={stars} />
+        <StarsRow stars={stars} max={maxStars(stage)} />
       </p>
       <div className="mt-3 flex items-center gap-2">
         <AppButton size="icon" aria-label="まえのステージ" onClick={onPrev} disabled={!onPrev}>

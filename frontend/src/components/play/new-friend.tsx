@@ -7,7 +7,7 @@ import { AppButton } from "@/components/app/button";
 import { useSound } from "@/components/app/sound-provider";
 import { FRIENDS } from "@/data/friends";
 import type { Stage } from "@/data/stages/catalog";
-import { growthForStars, type Stars } from "@/lib/game/stars";
+import { growthForStage, type Stars } from "@/lib/game/stars";
 import { growthImage } from "@/lib/spru-images";
 
 /** 初めてクリアしたステージの子が「なかまに なった！」と出てくる。画面いっぱいに出す */
@@ -31,7 +31,7 @@ export function NewFriend({ stage, stars, onClose }: { stage: Stage; stars: Star
         className="pointer-events-none absolute -inset-1/2 animate-beams bg-[repeating-conic-gradient(from_0deg,rgba(255,255,255,0.65)_0deg_7deg,transparent_7deg_30deg)]"
       />
       <Image
-        src={growthImage(stage.color, growthForStars(stars))}
+        src={growthImage(stage.color, growthForStage(stage, stars))}
         alt=""
         width={180}
         height={225}

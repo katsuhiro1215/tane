@@ -6,9 +6,9 @@ import { Crown } from "lucide-react";
 
 import { StarsRow } from "@/components/app/stars-row";
 import { GrowImage } from "@/components/mode/grow-image";
-import type { Stage } from "@/data/stages/catalog";
+import { displayNumber, maxStars, type Stage } from "@/data/stages/catalog";
 import { isUnlocked, starsOf, type StarMap } from "@/lib/game/progression";
-import { growthForStars, type Stars } from "@/lib/game/stars";
+import { growthForStage, type Stars } from "@/lib/game/stars";
 import { growthImage } from "@/lib/spru-images";
 import { cn } from "@/lib/utils";
 
@@ -56,14 +56,14 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
                   unlocked ? "bg-primary" : "bg-[#9aa39a]"
                 )}
               >
-                {stage.kind === "soroban" ? EVENT_SHORT[stage.event] : stage.number}
+                {stage.kind === "soroban" ? EVENT_SHORT[stage.event] : displayNumber(stage)}
               </span>
               {stage.isBoss && (
                 <Crown className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 text-accent" fill="currentColor" />
               )}
               {earned > 0 && (
                 <span className="absolute top-1 right-1">
-                  <StarsRow stars={earned} size="sm" animate={growing} />
+                  <StarsRow stars={earned} size="sm" animate={growing} max={maxStars(stage)} />
                 </span>
               )}
               {!unlocked ? (
@@ -71,10 +71,10 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
                   ?
                 </span>
               ) : growing && grew ? (
-                <GrowImage color={stage.color} from={grew.from} to={earned} />
+                <GrowImage stage={stage} from={grew.from} to={earned} />
               ) : (
                 <Image
-                  src={growthImage(stage.color, growthForStars(earned))}
+                  src={growthImage(stage.color, growthForStage(stage, earned))}
                   alt=""
                   width={56}
                   height={70}

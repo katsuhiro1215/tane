@@ -3,9 +3,9 @@ import { Leaf } from "lucide-react";
 
 import { StarsRow } from "@/components/app/stars-row";
 import { FRIENDS } from "@/data/friends";
-import type { Stage } from "@/data/stages/catalog";
+import { maxStars, type Stage } from "@/data/stages/catalog";
 import { stageLabel } from "@/lib/game/friends";
-import { growthForStars, type Stars } from "@/lib/game/stars";
+import { growthForStage, type Stars } from "@/lib/game/stars";
 import { growthImage } from "@/lib/spru-images";
 
 export function FriendCell({
@@ -32,14 +32,14 @@ export function FriendCell({
       {met ? (
         <>
           <Image
-            src={growthImage(stage.color, growthForStars(stars))}
+            src={growthImage(stage.color, growthForStage(stage, stars))}
             alt=""
             width={56}
             height={70}
             className="h-14 w-auto object-contain"
           />
           <span className="line-clamp-1 font-display text-[11px] font-black">{name}</span>
-          <StarsRow stars={stars} size="sm" />
+          <StarsRow stars={stars} size="sm" max={maxStars(stage)} />
         </>
       ) : (
         <>

@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { gardenFriends, starsOf } from "@/lib/game/progression";
-import { growthForStars } from "@/lib/game/stars";
+import { growthForStage } from "@/lib/game/stars";
 import { useProgress } from "@/lib/progress-store";
 import { growthImage, SPRU_POSES } from "@/lib/spru-images";
 
@@ -21,7 +21,7 @@ export function FeverFriends({ hopKey }: { hopKey: number }) {
         friends.map((stage, i) => (
           <span key={`${stage.id}-${hopKey}`} className="block animate-spru-hop" style={{ animationDelay: `${i * 40}ms` }}>
             <Image
-              src={growthImage(stage.color, growthForStars(starsOf(stars, stage.id)))}
+              src={growthImage(stage.color, growthForStage(stage, starsOf(stars, stage.id)))}
               alt=""
               width={40}
               height={54}
