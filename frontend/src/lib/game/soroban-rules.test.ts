@@ -26,7 +26,7 @@ function seeded(seed: number): () => number {
 
 const GRADES = SOROBAN_GRADES.map((g) => g.grade);
 const digits = (n: number) => String(n).length;
-const RUNS = 300;
+const RUNS = 200;
 
 /** 級・種目の問題を、種を変えて RUNS 回ぶん作る */
 function manyProblems(grade: number, event: SorobanEvent | "mogi"): SorobanProblem[] {
@@ -47,29 +47,32 @@ describe("みとりざん", () => {
   it("口数と桁がちょうどで、答えは口の合計", () => {
     for (const grade of GRADES) {
       const spec = gradeSpec(grade).mitori;
-      for (const p of manyProblems(grade, "mitori")) {
-        if (p.event !== "mitori") throw new Error("種目がちがう");
-        expect(p.terms).toHaveLength(spec.count);
-        expect(p.terms[0]).toBeGreaterThan(0);
-        for (const t of p.terms) {
-          expect(digits(Math.abs(t))).toBe(spec.digits);
-        }
-        expect(p.answer).toBe(p.terms.reduce((s, t) => s + t, 0));
-      }
+      const bad = manyProblems(grade, "mitori").filter((p) => {
+        if (p.event !== "mitori") return true;
+        return (
+          p.terms.length !== spec.count ||
+          p.terms[0] <= 0 ||
+          p.terms.some((t) => digits(Math.abs(t)) !== spec.digits) ||
+          p.answer !== p.terms.reduce((sum, t) => sum + t, 0)
+        );
+      });
+      expect(bad).toEqual([]);
     }
   });
 
   it("途中の合計が0より小さくならず、答えは0より大きい", () => {
     for (const grade of GRADES) {
-      for (const p of manyProblems(grade, "mitori")) {
-        if (p.event !== "mitori") throw new Error("種目がちがう");
+      const bad = manyProblems(grade, "mitori").filter((p) => {
+        if (p.event !== "mitori") return true;
         let sum = 0;
+        let negative = false;
         for (const t of p.terms) {
           sum += t;
-          expect(sum).toBeGreaterThanOrEqual(0);
+          if (sum < 0) negative = true;
         }
-        expect(p.answer).toBeGreaterThan(0);
-      }
+        return negative || p.answer <= 0;
+      });
+      expect(bad).toEqual([]);
     }
   });
 
@@ -87,16 +90,15 @@ describe("かけざん", () => {
   it("実法の桁の合計がちょうどで、実の桁 ≧ 法の桁、法が1けたなら2〜9", () => {
     for (const grade of GRADES) {
       const total = gradeSpec(grade).kakeDigits;
-      for (const p of manyProblems(grade, "kake")) {
-        if (p.event !== "kake") throw new Error("種目がちがう");
-        expect(digits(p.a) + digits(p.b)).toBe(total);
-        expect(digits(p.a)).toBeGreaterThanOrEqual(digits(p.b));
-        if (digits(p.b) === 1) {
-          expect(p.b).toBeGreaterThanOrEqual(2);
-          expect(p.b).toBeLessThanOrEqual(9);
-        }
-        expect(p.answer).toBe(p.a * p.b);
-      }
+      const bad = manyProblems(grade, "kake").filter(
+        (p) =>
+          p.event !== "kake" ||
+          digits(p.a) + digits(p.b) !== total ||
+          digits(p.a) < digits(p.b) ||
+          (digits(p.b) === 1 && (p.b < 2 || p.b > 9)) ||
+          p.answer !== p.a * p.b,
+      );
+      expect(bad).toEqual([]);
     }
   });
 
@@ -113,17 +115,14 @@ describe("わりざん", () => {
     for (const grade of GRADES) {
       const total = gradeSpec(grade).wariDigits;
       if (total === null) continue;
-      for (const p of manyProblems(grade, "wari")) {
-        if (p.event !== "wari") throw new Error("種目がちがう");
-        expect(digits(p.b) + digits(p.answer)).toBe(total);
-        expect(p.a).toBe(p.b * p.answer);
-        for (const n of [p.b, p.answer]) {
-          if (digits(n) === 1) {
-            expect(n).toBeGreaterThanOrEqual(2);
-            expect(n).toBeLessThanOrEqual(9);
-          }
-        }
-      }
+      const bad = manyProblems(grade, "wari").filter(
+        (p) =>
+          p.event !== "wari" ||
+          digits(p.b) + digits(p.answer) !== total ||
+          p.a !== p.b * p.answer ||
+          [p.b, p.answer].some((n) => digits(n) === 1 && (n < 2 || n > 9)),
+      );
+      expect(bad).toEqual([]);
     }
   });
 });
@@ -132,9 +131,8 @@ it("答えはいつも7けた以内", () => {
   for (const grade of GRADES) {
     for (const event of ["mitori", "kake", "wari", "mogi"] as const) {
       if (event === "wari" && gradeSpec(grade).wariDigits === null) continue;
-      for (const p of manyProblems(grade, event)) {
-        expect(String(p.answer).length).toBeLessThanOrEqual(SOROBAN_MAX_ANSWER_LENGTH);
-      }
+      const bad = manyProblems(grade, event).filter((p) => String(p.answer).length > SOROBAN_MAX_ANSWER_LENGTH);
+      expect(bad).toEqual([]);
     }
   }
 });

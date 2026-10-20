@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Fragment } from "react";
 import { Crown } from "lucide-react";
 
 import { StarsRow } from "@/components/app/stars-row";
@@ -19,16 +20,25 @@ interface StageGridProps {
   onSelect: (stageId: string) => void;
 }
 
+const EVENT_SHORT = { mitori: "みとり", kake: "かけ", wari: "わり", mogi: "もぎ" } as const;
+
 export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGridProps) {
   return (
     <ul className="grid grid-cols-4 gap-2 px-4 pt-5 pb-6">
       {stages.map((stage, index) => {
+        const gradeHeading = stage.kind === "soroban" && (index === 0 || stages[index - 1].kind !== "soroban" || (stages[index - 1] as typeof stage).grade !== stage.grade);
         const earned = starsOf(stars, stage.id);
         const unlocked = isUnlocked(stage, stars);
         const focused = stage.id === focusedId;
         const growing = grew?.stageId === stage.id;
         return (
-          <li key={stage.id} className="animate-pop-in" style={{ animationDelay: `${index * 35}ms` }}>
+          <Fragment key={stage.id}>
+          {gradeHeading && stage.kind === "soroban" && (
+            <li aria-hidden className="col-span-4 mt-1 font-display text-sm font-black text-primary">
+              {stage.grade}きゅう
+            </li>
+          )}
+          <li className="animate-pop-in" style={{ animationDelay: `${index * 35}ms` }}>
             <button
               type="button"
               onClick={() => onSelect(stage.id)}
@@ -46,7 +56,7 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
                   unlocked ? "bg-primary" : "bg-[#9aa39a]"
                 )}
               >
-                {stage.number}
+                {stage.kind === "soroban" ? EVENT_SHORT[stage.event] : stage.number}
               </span>
               {stage.isBoss && (
                 <Crown className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 text-accent" fill="currentColor" />
@@ -73,6 +83,7 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
               )}
             </button>
           </li>
+          </Fragment>
         );
       })}
     </ul>
