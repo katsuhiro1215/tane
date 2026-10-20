@@ -42,15 +42,15 @@ export const NORMAL_COLORS: readonly SpruColor[] = [
   "piko", "rosa", "fuji", "lili", "higa", "mira", "tuli", "nemu", "dali", "iris", "nera", "coco", "mari", "vio", "mimo", "came",
 ];
 
-/** レア（宝石の色）。5つ目のステージから混ぜる */
+/** レア（宝石の色）。4つ目のステージから、4つごとに混ぜる */
 export const RARE_COLORS: readonly SpruColor[] = ["emerald", "gold", "amber", "ruby", "sapphire", "pearl", "silver"];
 
-const RARE_FROM = 4;
-const RARE_EVERY = 3;
+const RARE_FROM = 3;
+const RARE_EVERY = 4;
 
 /**
  * mode 番目のあそびの index 番目（0始まり）のステージの色。
- * 1〜4つ目はノーマル、5・8・11つ目はレア、あとはノーマル。あそびごとに出だしをずらして、同じ並びにならないようにする
+ * 1〜3つ目はノーマル、4・8・12つ目はレア（12つ目のボスは別の色）、あとはノーマル。あそびごとに出だしをずらして、同じ並びにならないようにする
  */
 export function colorForStage(mode: number, index: number): SpruColor {
   const isRare = index >= RARE_FROM && (index - RARE_FROM) % RARE_EVERY === 0;
