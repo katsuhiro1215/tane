@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getStage, stagesOfMode, type ModeId } from "@/data/stages/catalog";
-import { favoriteText, modeBloom, nextGrowthText, unlockHint } from "@/lib/game/friends";
+import { continueLabel, favoriteText, modeBloom, nextGrowthText, stageLabel, unlockHint } from "@/lib/game/friends";
 import type { StarMap } from "@/lib/game/progression";
 
 function cleared(mode: ModeId, n: number, value: 1 | 2 | 3 = 3): StarMap {
@@ -35,4 +35,17 @@ it("favoriteText と unlockHint はステージの名前・あそび・番号か
   expect(favoriteText(getStage("add-3")!)).toBe("くりあがり（たしざん 3）");
   expect(favoriteText(getStage("flash-6")!)).toBe("ボス 2けた（フラッシュ 6）");
   expect(unlockHint(getStage("mul-4")!)).toBe("かけざん 4を クリアすると なかまに なるよ");
+});
+
+it("そろばんは番号ではなく級と種目で呼ぶ（画面に番号を出していないため）", () => {
+  const kake6 = getStage("soroban-16")!;
+  expect(stageLabel(kake6)).toBe("6きゅう かけざん");
+  expect(unlockHint(kake6)).toBe("6きゅう かけざんを クリアすると なかまに なるよ");
+  expect(favoriteText(kake6)).toBe("6きゅう かけざん（あわせて 5けた）");
+  expect(continueLabel(kake6)).toBe("そろばん ・ 6きゅう かけざん");
+});
+
+it("ほかのあそびの呼び方は今のまま", () => {
+  expect(stageLabel(getStage("add-3")!)).toBe("たしざん 3");
+  expect(continueLabel(getStage("add-3")!)).toBe("たしざん ステージ3 ・ くりあがり");
 });

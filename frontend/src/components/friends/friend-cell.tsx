@@ -3,7 +3,8 @@ import { Leaf } from "lucide-react";
 
 import { StarsRow } from "@/components/app/stars-row";
 import { FRIENDS } from "@/data/friends";
-import { MODES, type Stage } from "@/data/stages/catalog";
+import type { Stage } from "@/data/stages/catalog";
+import { stageLabel } from "@/lib/game/friends";
 import { growthForStars, type Stars } from "@/lib/game/stars";
 import { growthImage } from "@/lib/spru-images";
 
@@ -24,7 +25,7 @@ export function FriendCell({
     <button
       type="button"
       onClick={onOpen}
-      aria-label={met ? name : `まだ あって いない なかま（${MODES[stage.mode].label} ${stage.number}）`}
+      aria-label={met ? name : `まだ あって いない なかま（${stageLabel(stage)}）`}
       data-in-garden={met && inGarden ? "true" : "false"}
       className="relative flex h-28 w-full flex-col items-center justify-end gap-0.5 rounded-2xl bg-card/80 p-1 active:translate-y-px"
     >

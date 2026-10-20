@@ -27,12 +27,21 @@ export function modeBloom(mode: ModeId, stars: StarMap): ModeBloom {
   return { bloomed, total: list.length, complete: bloomed === list.length, left: list.length - bloomed };
 }
 
-function stageLabel(stage: Stage): string {
+/** 子どもに見せるステージの呼び方。そろばんは画面に番号を出していないので、級と種目で呼ぶ */
+export function stageLabel(stage: Stage): string {
+  if (stage.kind === "soroban") return stage.name;
   return `${MODES[stage.mode].label} ${stage.number}`;
 }
 
 export function favoriteText(stage: Stage): string {
+  if (stage.kind === "soroban") return `${stage.name}（${stage.description}）`;
   return `${stage.name}（${stageLabel(stage)}）`;
+}
+
+/** ホームの「つづきから」の下に出す行き先 */
+export function continueLabel(stage: Stage): string {
+  if (stage.kind === "soroban") return `${MODES.soroban.label} ・ ${stage.name}`;
+  return `${MODES[stage.mode].label} ステージ${stage.number} ・ ${stage.name}`;
 }
 
 export function unlockHint(stage: Stage): string {
