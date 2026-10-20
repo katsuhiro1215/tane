@@ -21,3 +21,7 @@ it("チャレンジのプレイ画面はクイズ用、入口はホーム用", (
   expect(bgmTrackFor("/challenge/mix")).toBe("quiz");
   expect(bgmTrackFor("/challenge")).toBe("home");
 });
+
+it("そろばんのプレイ画面もクイズ用", () => {
+  expect(bgmTrackFor("/soroban/soroban-15")).toBe("quiz");
+});
