@@ -13,32 +13,26 @@ export interface SeedStageRule {
   readonly thresholds: SeedThresholds;
 }
 
-const ADD_1: ArithmeticRule = { op: "add", a: range(1, 9), b: range(1, 9) };
-const SUB_1: ArithmeticRule = { op: "sub", a: range(2, 9), b: range(1, 9) };
-const ADD_2: ArithmeticRule = { op: "add", a: range(10, 99), b: range(10, 99) };
-const SUB_2: ArithmeticRule = { op: "sub", a: range(20, 99), b: range(10, 89) };
-const MUL: ArithmeticRule = { op: "mul", a: range(2, 9), b: range(2, 9) };
-const DIV: ArithmeticRule = { op: "div", divisor: range(2, 9), quotient: range(2, 9) };
-
+// 最初のグループは「たし算（きほん）」。今のたしざん1〜4と同じ中身で、ゆっくり上げていく（Owner 決定）
 export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
   {
-    name: "たしひき 1けた",
-    description: "1けた",
-    rule: { rule: { op: "mix", rules: [ADD_1, SUB_1] }, fallMs: 9000, simultaneous: 2, thresholds: [8, 14, 20, 26, 32] },
+    name: "こたえが5まで",
+    description: "1けた＋1けた",
+    rule: { rule: { op: "add", a: range(1, 4), b: range(1, 4), maxAnswer: 5 }, fallMs: 11000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
   },
   {
-    name: "たしひき 2けた",
-    description: "2けた",
-    rule: { rule: { op: "mix", rules: [ADD_2, SUB_2] }, fallMs: 8500, simultaneous: 2, thresholds: [7, 12, 17, 22, 27] },
+    name: "こたえが10まで",
+    description: "1けた＋1けた",
+    rule: { rule: { op: "add", a: range(1, 9), b: range(1, 9), maxAnswer: 10 }, fallMs: 10000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
   },
   {
-    name: "かけわり くく",
-    description: "九九",
-    rule: { rule: { op: "mix", rules: [MUL, DIV] }, fallMs: 7500, simultaneous: 3, thresholds: [7, 12, 17, 22, 27] },
+    name: "くりあがり",
+    description: "1けた＋1けた",
+    rule: { rule: { op: "add", a: range(2, 9), b: range(2, 9), minAnswer: 11 }, fallMs: 9000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
   },
   {
-    name: "しそく ごちゃまぜ",
-    description: "ぜんぶ",
-    rule: { rule: { op: "mix", rules: [ADD_2, SUB_2, MUL, DIV] }, fallMs: 6000, simultaneous: 3, thresholds: [6, 10, 14, 19, 24] },
+    name: "1けた まぜこぜ",
+    description: "1けた＋1けた",
+    rule: { rule: { op: "add", a: range(1, 9), b: range(1, 9) }, fallMs: 8500, simultaneous: 2, thresholds: [7, 12, 17, 22, 27] },
   },
 ];
