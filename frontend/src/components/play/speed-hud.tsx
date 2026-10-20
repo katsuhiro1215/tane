@@ -11,7 +11,8 @@ export function SpeedHud({
   getElapsedMs,
 }: {
   session: PlaySession;
-  targetMs: number;
+  /** null は時間なしのステージ。残り時間のバーを出さない */
+  targetMs: number | null;
   getElapsedMs: () => number;
 }) {
   return (
@@ -20,7 +21,7 @@ export function SpeedHud({
         <GaugeBar gauge={session.gauge} feverLeft={session.feverLeft} />
         <ScoreCounter score={session.score} />
       </div>
-      <TimeBar targetMs={targetMs} getElapsedMs={getElapsedMs} />
+      {targetMs !== null && <TimeBar targetMs={targetMs} getElapsedMs={getElapsedMs} />}
     </div>
   );
 }

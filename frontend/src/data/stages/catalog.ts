@@ -3,7 +3,7 @@ import type { ArithmeticRule } from "@/lib/game/problem-rules";
 import { sorobanTargetMs, SOROBAN_PROBLEMS, type SorobanRule, type SorobanStageEvent } from "@/lib/game/soroban-rules";
 
 import { ADD_STAGE_SPECS } from "./add";
-import { REGULAR_COLORS, type SpruColor } from "./colors";
+import { colorForStage, type SpruColor } from "./colors";
 import { DIV_STAGE_SPECS } from "./div";
 import { FLASH_STAGE_SPECS } from "./flash";
 import { MUL_STAGE_SPECS } from "./mul";
@@ -83,9 +83,7 @@ const SOROBAN_BOSS_COLORS: readonly SpruColor[] = ["crystal", "platinum", "obsid
 
 function colorFor(mode: ModeId, index: number, isBoss: boolean): SpruColor {
   if (isBoss) return mode === "soroban" ? SOROBAN_BOSS_COLORS[index % SOROBAN_BOSS_COLORS.length] : BOSS_COLORS[mode];
-  // あそびごとに色の出だしをずらし、どのあそびでも1ステージ目が同じ色にならないようにする
-  const offset = MODE_IDS.indexOf(mode) * 3;
-  return REGULAR_COLORS[(offset + index) % REGULAR_COLORS.length];
+  return colorForStage(MODE_IDS.indexOf(mode), index);
 }
 
 function build<R>(
@@ -169,6 +167,12 @@ export function playPath(stage: Stage): string {
 
 export function problemCount(stage: Stage): number {
   return stage.kind === "soroban" ? SOROBAN_PROBLEMS : PROBLEMS_PER_STAGE;
+}
+
+/** ★3に必要な目標タイム。時間なしのステージ（そろばんのみとりざん・かけざん・わりざん）は null で、ミスなしなら★3 */
+export function stageTargetMs(stage: Stage): number | null {
+  if (stage.kind === "soroban" && stage.event !== "mogi") return null;
+  return targetMs(stage);
 }
 
 export function targetMs(stage: Stage): number {

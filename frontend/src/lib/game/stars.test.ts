@@ -49,3 +49,19 @@ it("mistakesOf は答えた数 − 正解の数", () => {
 it("growthForStars はタネ→芽→つぼみ→花", () => {
   expect([0, 1, 2, 3].map((s) => growthForStars(s as 0 | 1 | 2 | 3))).toEqual(["seed", "sprout", "bud", "flower"]);
 });
+
+describe("時間なしのステージ（targetMs が null）", () => {
+  it("ミスなしでクリアすれば、どれだけ時間がかかっても★3", () => {
+    expect(starsForResult(result({ targetMs: null, elapsedMs: 9_999_999 }))).toBe(3);
+  });
+
+  it("ミスがあれば時間なしでも★2・★1、失敗は★0", () => {
+    expect(starsForResult(result({ targetMs: null, mistakes: 1 }))).toBe(2);
+    expect(starsForResult(result({ targetMs: null, mistakes: 3 }))).toBe(1);
+    expect(starsForResult(result({ targetMs: null, status: "failed" }))).toBe(0);
+  });
+
+  it("「あと○びょう」は出ない", () => {
+    expect(missedThreeByMs(result({ targetMs: null, elapsedMs: 9_999_999 }))).toBeNull();
+  });
+});

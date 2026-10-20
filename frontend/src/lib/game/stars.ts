@@ -8,19 +8,20 @@ export interface StageResultInput {
   status: StageStatus;
   mistakes: number;
   elapsedMs: number;
-  targetMs: number;
+  /** 時間の条件。null は時間なし（ミスなしなら★3） */
+  targetMs: number | null;
 }
 
 export function starsForResult({ status, mistakes, elapsedMs, targetMs }: StageResultInput): Stars {
   if (status !== "cleared") return 0;
-  if (mistakes === 0 && elapsedMs <= targetMs) return 3;
+  if (mistakes === 0 && (targetMs === null || elapsedMs <= targetMs)) return 3;
   if (mistakes <= 2) return 2;
   return 1;
 }
 
 /** ミスなしでクリアしたのに時間で★3を逃したとき、目標タイムを超えたミリ秒。それ以外は null */
 export function missedThreeByMs({ status, mistakes, elapsedMs, targetMs }: StageResultInput): number | null {
-  if (status !== "cleared" || mistakes !== 0 || elapsedMs <= targetMs) return null;
+  if (targetMs === null || status !== "cleared" || mistakes !== 0 || elapsedMs <= targetMs) return null;
   return elapsedMs - targetMs;
 }
 

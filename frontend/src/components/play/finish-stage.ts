@@ -1,5 +1,5 @@
 import type { StageOutcome } from "@/components/play/stage-result";
-import { targetMs, type Stage } from "@/data/stages/catalog";
+import { stageTargetMs, type Stage } from "@/data/stages/catalog";
 import type { PlaySession } from "@/lib/game/play-session";
 import type { StageStatus } from "@/lib/game/stage";
 import { missedThreeByMs, mistakesOf, starsForResult } from "@/lib/game/stars";
@@ -15,7 +15,7 @@ export function finishStage(
     status: next.status,
     mistakes: mistakesOf(next),
     elapsedMs: session.elapsedMs,
-    targetMs: targetMs(stage),
+    targetMs: stageTargetMs(stage),
   };
   const stars = starsForResult(input);
   const cleared = next.status === "cleared";

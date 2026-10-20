@@ -47,6 +47,11 @@ describe("finishStage", () => {
     expect(outcome.missedThreeByMs).toBe(3_400);
   });
 
+  it("時間なしのステージ（そろばんのみとりざん）は、遅くてもミスなしで★3", () => {
+    const outcome = finishStage(getStage("soroban-15")!, { status: "cleared", currentIndex: 10, correctCount: 10 }, { ...INITIAL_SESSION, score: 1500, elapsedMs: 900_000 });
+    expect(outcome).toMatchObject({ stars: 3, targetMs: null, missedThreeByMs: null });
+  });
+
   it("失敗した回は★も点数も保存しない", () => {
     const outcome = finishStage(add1, { status: "failed", currentIndex: 7, correctCount: 2 }, { ...INITIAL_SESSION, score: 500, elapsedMs: 9_000 });
     expect(outcome).toMatchObject({ stars: 0, improved: false, newBest: false });

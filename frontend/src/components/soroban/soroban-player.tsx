@@ -19,7 +19,7 @@ import { StageResult, type StageOutcome } from "@/components/play/stage-result";
 import { useSpeedPlay } from "@/components/play/use-speed-play";
 import { MitoriSheet } from "@/components/soroban/mitori-sheet";
 import { SorobanProblemText } from "@/components/soroban/soroban-problem-text";
-import { getStage, targetMs, type SorobanStage } from "@/data/stages/catalog";
+import { getStage, stageTargetMs, type SorobanStage } from "@/data/stages/catalog";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
 import {
   generateSorobanProblems,
@@ -122,7 +122,7 @@ export function SorobanPlayer({ stageId }: { stageId: string }) {
         index={Math.min(state.currentIndex + 1, state.problems.length)}
         total={state.problems.length}
       />
-      <SpeedHud session={speed.session} targetMs={targetMs(current)} getElapsedMs={speed.getElapsedMs} />
+      <SpeedHud session={speed.session} targetMs={stageTargetMs(current)} getElapsedMs={speed.getElapsedMs} />
       {inFever && <FeverFriends hopKey={speed.session.answered} />}
       <Panel
         className={cn(

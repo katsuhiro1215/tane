@@ -92,6 +92,12 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
 // 色の呼び名は設計書の付録B
 export const COLOR_LABELS: Record<SpruColor, string> = {
   spru: "わかば",
+  lumi: "ルミ",
+  momo: "モモ",
+  kuru: "クル",
+  ruru: "ルル",
+  saku: "サク",
+  lavi: "ラビ",
   emerald: "エメラルド",
   gold: "ゴールド",
   amber: "アンバー",

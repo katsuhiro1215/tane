@@ -4,7 +4,7 @@ import { COLOR_LABELS, FRIENDS } from "@/data/friends";
 import { STAGES } from "@/data/stages/catalog";
 import { SPRU_COLORS } from "@/data/stages/colors";
 
-it("54ステージすべてに名前とひとことがあり、余分なidは無い", () => {
+it("全ステージに名前とひとことがあり、余分なidは無い", () => {
   expect(Object.keys(FRIENDS).sort()).toEqual(STAGES.map((stage) => stage.id).sort());
   for (const stage of STAGES) {
     expect(FRIENDS[stage.id].name.length).toBeGreaterThan(0);

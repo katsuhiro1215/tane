@@ -21,7 +21,7 @@ export interface StageOutcome {
   score: number;
   newBest: boolean;
   elapsedMs: number;
-  targetMs: number;
+  targetMs: number | null;
   missedThreeByMs: number | null;
 }
 
@@ -77,7 +77,7 @@ function ResultBody({ stage, cleared, correctCount, total, outcome, onRetry }: S
         <p className="font-bold">
           {correctCount} / {total} もん せいかい
         </p>
-        {cleared && (
+        {cleared && outcome.targetMs !== null && (
           <p className="text-sm font-bold text-muted-foreground">
             かかった じかん {Math.round(outcome.elapsedMs / 1000)}びょう / もくひょう {Math.round(outcome.targetMs / 1000)}びょう
           </p>

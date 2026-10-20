@@ -9,6 +9,7 @@ import {
   problemCount,
   SECONDS_PER_PROBLEM,
   STAGES,
+  stageTargetMs,
   stagesOfMode,
   targetMs,
   type Stage,
@@ -79,6 +80,15 @@ describe("そろばんのステージ（設計書2.2）", () => {
     expect(problemCount(getStage("add-1")!)).toBe(20);
     expect(targetMs(getStage("soroban-15")!)).toBe(180_000);
     expect(targetMs(getStage("add-1")!)).toBe(80_000);
+  });
+
+  it("時間があるのは、もぎけんていだけ（ほかのステージは時間なしで、ミスなしなら★3）", () => {
+    for (const s of soroban) {
+      expect(stageTargetMs(s) === null).toBe(s.kind === "soroban" && s.event !== "mogi");
+    }
+    expect(stageTargetMs(getStage("soroban-18")!)).toBe(targetMs(getStage("soroban-18")!));
+    expect(stageTargetMs(getStage("soroban-15")!)).toBeNull();
+    expect(stageTargetMs(getStage("add-1")!)).toBe(80_000);
   });
 
   it("プレイのURLは /soroban/<id>", () => {
