@@ -25,9 +25,9 @@ const N = 2000;
 const arithmetic = STAGES.filter((s): s is Extract<Stage, { kind: "arithmetic" }> => s.kind === "arithmetic");
 
 describe("ステージの数とid", () => {
-  it("全部で84、あそびごとに12・12・12・12・6・26・4", () => {
-    expect(STAGES).toHaveLength(84);
-    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 4]);
+  it("全部で88、あそびごとに12・12・12・12・6・26・8", () => {
+    expect(STAGES).toHaveLength(88);
+    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 8]);
   });
 
   it("idは `<あそび>-<番号>` で重複しない", () => {
@@ -188,21 +188,22 @@ describe("目安の秒数と目標タイム（設計書2.5）", () => {
 describe("しそくえんざん（種が降る）", () => {
   const list = stagesOfMode("shisoku");
 
-  it("4ステージで、idは shisoku-1〜4、遊ぶ場所は /seed/", () => {
-    expect(list.map((s) => s.id)).toEqual(["shisoku-1", "shisoku-2", "shisoku-3", "shisoku-4"]);
+  it("8ステージで、idは shisoku-1〜8、遊ぶ場所は /seed/", () => {
+    expect(list.map((s) => s.id)).toEqual(Array.from({ length: 8 }, (_, i) => `shisoku-${i + 1}`));
     expect(playPath(list[0])).toBe("/seed/shisoku-1");
     expect(list.every((s) => s.kind === "seed" && !s.isBoss)).toBe(true);
   });
 
   it("★の最大は5、ロック解除は★3。既存のステージは最大3・解除は★1", () => {
-    expect(list.map((s) => maxStars(s))).toEqual([5, 5, 5, 5]);
-    expect(list.map((s) => unlockStars(s))).toEqual([3, 3, 3, 3]);
+    expect(list.every((s) => maxStars(s) === 5)).toBe(true);
+    expect(list.every((s) => unlockStars(s) === 3)).toBe(true);
     expect(maxStars(getStage("add-1")!)).toBe(3);
     expect(unlockStars(getStage("add-1")!)).toBe(1);
   });
 
-  it("表示の番号は 1-1〜1-4。ほかは番号のまま", () => {
-    expect(list.map((s) => displayNumber(s))).toEqual(["1-1", "1-2", "1-3", "1-4"]);
+  it("表示の番号は 1-1〜1-4、2-1〜2-4。ほかは番号のまま", () => {
+    expect(list.map((s) => displayNumber(s))).toEqual(["1-1", "1-2", "1-3", "1-4", "2-1", "2-2", "2-3", "2-4"]);
+    expect(list.slice(4).map((s) => s.description)).toEqual(Array(4).fill("ひきざん（きほん）"));
     expect(displayNumber(getStage("add-3")!)).toBe("3");
   });
 

@@ -27,6 +27,7 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
     <ul className="grid grid-cols-4 gap-2 px-4 pt-5 pb-6">
       {stages.map((stage, index) => {
         const gradeHeading = stage.kind === "soroban" && (index === 0 || stages[index - 1].kind !== "soroban" || (stages[index - 1] as typeof stage).grade !== stage.grade);
+        const groupHeading = stage.kind === "seed" && (index === 0 || stages[index - 1].description !== stage.description);
         const earned = starsOf(stars, stage.id);
         const unlocked = isUnlocked(stage, stars);
         const focused = stage.id === focusedId;
@@ -36,6 +37,11 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
           {gradeHeading && stage.kind === "soroban" && (
             <li aria-hidden className="col-span-4 mt-1 font-display text-sm font-black text-primary">
               {stage.grade}きゅう
+            </li>
+          )}
+          {groupHeading && (
+            <li aria-hidden className="col-span-4 mt-1 font-display text-sm font-black text-primary">
+              {stage.description}
             </li>
           )}
           <li className="animate-pop-in" style={{ animationDelay: `${index * 35}ms` }}>

@@ -1,4 +1,6 @@
 import { range, type ArithmeticRule } from "@/lib/game/problem-rules";
+
+import { SUB_STAGE_SPECS } from "./sub";
 import type { SeedThresholds } from "@/lib/game/seed-stars";
 
 import type { StageSpec } from "./spec";
@@ -13,26 +15,42 @@ export interface SeedStageRule {
   readonly thresholds: SeedThresholds;
 }
 
-// 最初のグループは「たし算（きほん）」。今のたしざん1〜4と同じ中身で、ゆっくり上げていく（Owner 決定）
+/** 1つのグループのステージ数。表示の番号は「グループ-その中の番号」（1-1〜1-4、2-1〜…） */
+export const SHISOKU_GROUP_SIZE = 4;
+export const SHISOKU_GROUP_NAMES = ["たしざん（きほん）", "ひきざん（きほん）"] as const;
+
+// グループ1は「たし算（きほん）」、グループ2は「ひき算（きほん）」。それぞれ今のたしざん・ひきざんの1〜4と同じ中身で、ゆっくり上げていく（Owner 決定）
+const SUB_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 11000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 10000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
+  { fallMs: 9000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
+  { fallMs: 8500, simultaneous: 2, thresholds: [7, 12, 17, 22, 27] },
+];
+
 export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
   {
     name: "こたえが5まで",
-    description: "1けた＋1けた",
+    description: SHISOKU_GROUP_NAMES[0],
     rule: { rule: { op: "add", a: range(1, 4), b: range(1, 4), maxAnswer: 5 }, fallMs: 11000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
   },
   {
     name: "こたえが10まで",
-    description: "1けた＋1けた",
+    description: SHISOKU_GROUP_NAMES[0],
     rule: { rule: { op: "add", a: range(1, 9), b: range(1, 9), maxAnswer: 10 }, fallMs: 10000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
   },
   {
     name: "くりあがり",
-    description: "1けた＋1けた",
+    description: SHISOKU_GROUP_NAMES[0],
     rule: { rule: { op: "add", a: range(2, 9), b: range(2, 9), minAnswer: 11 }, fallMs: 9000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
   },
   {
     name: "1けた まぜこぜ",
-    description: "1けた＋1けた",
+    description: SHISOKU_GROUP_NAMES[0],
     rule: { rule: { op: "add", a: range(1, 9), b: range(1, 9) }, fallMs: 8500, simultaneous: 2, thresholds: [7, 12, 17, 22, 27] },
   },
+  ...SUB_STAGE_SPECS.slice(0, SHISOKU_GROUP_SIZE).map((spec, i) => ({
+    name: spec.name,
+    description: SHISOKU_GROUP_NAMES[1],
+    rule: { rule: spec.rule, ...SUB_SEED[i] },
+  })),
 ];

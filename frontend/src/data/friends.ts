@@ -91,6 +91,10 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "shisoku-2": { name: "ケタロ", line: "10まで ぽんぽん たそう" },
   "shisoku-3": { name: "ククルン", line: "くりあがり、できるよ！" },
   "shisoku-4": { name: "ゴチャモ", line: "どんな たしざんも まかせて！" },
+  "shisoku-5": { name: "ペロリ", line: "5から ひいて ぺろり！" },
+  "shisoku-6": { name: "ヒュン", line: "10までなら ひゅん！" },
+  "shisoku-7": { name: "カリル", line: "となりから かりるんだよ" },
+  "shisoku-8": { name: "ヒクロ", line: "20まで ぜんぶ ひけるよ！" },
 };
 
 // 色の呼び名は設計書の付録B

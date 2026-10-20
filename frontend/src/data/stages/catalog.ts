@@ -7,7 +7,7 @@ import { colorForStage, type SpruColor } from "./colors";
 import { DIV_STAGE_SPECS } from "./div";
 import { FLASH_STAGE_SPECS } from "./flash";
 import { MUL_STAGE_SPECS } from "./mul";
-import { SHISOKU_STAGE_SPECS, type SeedStageRule } from "./shisoku";
+import { SHISOKU_GROUP_SIZE, SHISOKU_STAGE_SPECS, type SeedStageRule } from "./shisoku";
 import { SOROBAN_STAGE_SPECS } from "./soroban";
 import type { StageSpec } from "./spec";
 import { SUB_STAGE_SPECS } from "./sub";
@@ -217,7 +217,12 @@ export function unlockStars(stage: Stage): 1 | 3 {
   return stage.kind === "seed" ? 3 : 1;
 }
 
+/** しそくえんざんの番号。5番目のステージは「2-1」 */
+function seedNumber(number: number): string {
+  return `${Math.floor((number - 1) / SHISOKU_GROUP_SIZE) + 1}-${((number - 1) % SHISOKU_GROUP_SIZE) + 1}`;
+}
+
 /** 画面に出すステージの番号。しそくえんざんは「1-1」の形 */
 export function displayNumber(stage: Stage): string {
-  return stage.kind === "seed" ? `1-${stage.number}` : String(stage.number);
+  return stage.kind === "seed" ? seedNumber(stage.number) : String(stage.number);
 }
