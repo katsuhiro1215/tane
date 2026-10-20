@@ -35,7 +35,7 @@ export function createRun(config: SeedFieldConfig, mode: SeedRunMode, rng: () =>
   };
 }
 
-function miss(run: SeedRun, cause: "landed" | "wrong"): SeedRun {
+function miss(run: SeedRun): SeedRun {
   const hp = applyDamage(run.hp);
   return { ...run, hp, mistakes: run.mistakes + 1, combo: 0, status: isDefeated(hp) ? "defeated" : run.status };
 }
@@ -53,7 +53,7 @@ export function stepRun(
   let next: SeedRun = { ...run, field, playedMs: run.playedMs + dt };
   const events: SeedEvent[] = [];
   for (let i = 0; i < landed.length && next.status === "playing"; i++) {
-    next = miss(next, "landed");
+    next = miss(next);
     events.push({ kind: "miss", cause: "landed" });
   }
   if (next.status === "playing" && next.mode === "minute" && next.playedMs >= SEED_ROUND_MS) {
@@ -67,7 +67,7 @@ export function tapRun(run: SeedRun, seedId: number, input: number): { run: Seed
   if (run.status !== "playing") return { run, events: [] };
   const tapped = tapSeed(run.field, seedId, input);
   if (tapped.result === "none" || !tapped.seed) return { run, events: [] };
-  if (tapped.result === "wrong") return { run: miss(run, "wrong"), events: [{ kind: "miss", cause: "wrong" }] };
+  if (tapped.result === "wrong") return { run: miss(run), events: [{ kind: "miss", cause: "wrong" }] };
   const combo = run.combo + 1;
   return {
     run: { ...run, field: tapped.field, correct: run.correct + 1, combo, maxCombo: Math.max(run.maxCombo, combo) },
