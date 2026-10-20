@@ -1,6 +1,4 @@
-import type { Operator, Problem } from "@/lib/game/problem-rules";
-
-const OPERATOR_SYMBOL: Record<Operator, string> = { add: "＋", sub: "−", mul: "×", div: "÷" };
+import { OPERATOR_SYMBOL, type Problem } from "@/lib/game/problem-rules";
 
 export function ProblemText({ problem }: { problem: Problem }) {
   return (

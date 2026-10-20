@@ -1,5 +1,7 @@
 export type Operator = "add" | "sub" | "mul" | "div";
 
+export const OPERATOR_SYMBOL: Record<Operator, string> = { add: "＋", sub: "−", mul: "×", div: "÷" };
+
 export interface Problem {
   operator: Operator;
   operandA: number;
