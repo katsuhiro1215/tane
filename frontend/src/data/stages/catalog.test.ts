@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  displayNumber,
   getStage,
   isModeId,
+  maxStars,
   MODE_IDS,
   nextStageInMode,
   playPath,
@@ -12,6 +14,7 @@ import {
   stageTargetMs,
   stagesOfMode,
   targetMs,
+  unlockStars,
   type Stage,
 } from "@/data/stages/catalog";
 import { SPRU_COLORS } from "@/data/stages/colors";
@@ -22,9 +25,9 @@ const N = 2000;
 const arithmetic = STAGES.filter((s): s is Extract<Stage, { kind: "arithmetic" }> => s.kind === "arithmetic");
 
 describe("ステージの数とid", () => {
-  it("全部で80、あそびごとに12・12・12・12・6・26", () => {
-    expect(STAGES).toHaveLength(80);
-    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26]);
+  it("全部で84、あそびごとに12・12・12・12・6・26・4", () => {
+    expect(STAGES).toHaveLength(84);
+    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 4]);
   });
 
   it("idは `<あそび>-<番号>` で重複しない", () => {
@@ -34,7 +37,7 @@ describe("ステージの数とid", () => {
   });
 
   it("各あそびの最後だけがボス（そろばんは各級のもぎけんてい）", () => {
-    for (const mode of MODE_IDS.filter((m) => m !== "soroban")) {
+    for (const mode of MODE_IDS.filter((m) => m !== "soroban" && m !== "shisoku")) {
       const list = stagesOfMode(mode);
       expect(list.map((s) => s.isBoss)).toEqual(list.map((_, i) => i === list.length - 1));
     }
@@ -44,9 +47,11 @@ describe("ステージの数とid", () => {
     for (const s of STAGES) expect(SPRU_COLORS).toContain(s.color);
   });
 
-  it("kind は、フラッシュが flash、そろばんが soroban、ほかが arithmetic", () => {
+  it("kind は、フラッシュが flash、そろばんが soroban、しそくえんざんが seed、ほかが arithmetic", () => {
     for (const s of STAGES) {
-      expect(s.kind).toBe(s.mode === "flash" ? "flash" : s.mode === "soroban" ? "soroban" : "arithmetic");
+      expect(s.kind).toBe(
+        s.mode === "flash" ? "flash" : s.mode === "soroban" ? "soroban" : s.mode === "shisoku" ? "seed" : "arithmetic"
+      );
     }
   });
 });
@@ -169,6 +174,7 @@ describe("目安の秒数と目標タイム（設計書2.5）", () => {
       div: [5, 5, 5, 5, 5, 6, 8, 10, 12, 9, 14, 10],
       flash: [5, 5, 5, 6, 5, 8],
       soroban: [],
+      shisoku: [],
     });
   });
 
@@ -176,5 +182,47 @@ describe("目安の秒数と目標タイム（設計書2.5）", () => {
     for (const s of STAGES) expect(s.secondsPerProblem).toBeGreaterThan(0);
     expect(targetMs(getStage("add-1")!)).toBe(80_000);
     expect(targetMs(getStage("div-11")!)).toBe(280_000);
+  });
+});
+
+describe("しそくえんざん（種が降る）", () => {
+  const list = stagesOfMode("shisoku");
+
+  it("4ステージで、idは shisoku-1〜4、遊ぶ場所は /seed/", () => {
+    expect(list.map((s) => s.id)).toEqual(["shisoku-1", "shisoku-2", "shisoku-3", "shisoku-4"]);
+    expect(playPath(list[0])).toBe("/seed/shisoku-1");
+    expect(list.every((s) => s.kind === "seed" && !s.isBoss)).toBe(true);
+  });
+
+  it("★の最大は5、ロック解除は★3。既存のステージは最大3・解除は★1", () => {
+    expect(list.map((s) => maxStars(s))).toEqual([5, 5, 5, 5]);
+    expect(list.map((s) => unlockStars(s))).toEqual([3, 3, 3, 3]);
+    expect(maxStars(getStage("add-1")!)).toBe(3);
+    expect(unlockStars(getStage("add-1")!)).toBe(1);
+  });
+
+  it("表示の番号は 1-1〜1-4。ほかは番号のまま", () => {
+    expect(list.map((s) => displayNumber(s))).toEqual(["1-1", "1-2", "1-3", "1-4"]);
+    expect(displayNumber(getStage("add-3")!)).toBe("3");
+  });
+
+  it("どのルールも50問ずつ作れて、答えは0〜999", () => {
+    for (const stage of list) {
+      if (stage.kind !== "seed") throw new Error("seed stage expected");
+      for (const problem of generateProblems(stage.rule.rule, 50)) {
+        expect(problem.answer).toBeGreaterThanOrEqual(0);
+        expect(problem.answer).toBeLessThanOrEqual(999);
+        expect(satisfiesRule(problem, stage.rule.rule)).toBe(true);
+      }
+    }
+  });
+
+  it("目標の正解数は★1〜★5で増えていく", () => {
+    for (const stage of list) {
+      if (stage.kind !== "seed") throw new Error("seed stage expected");
+      const t = stage.rule.thresholds;
+      expect([...t].sort((a, b) => a - b)).toEqual([...t]);
+      expect(new Set(t).size).toBe(5);
+    }
   });
 });

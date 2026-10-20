@@ -87,6 +87,10 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "soroban-24": { name: "ヨンカ", line: "7けたの かけざん、プロだね" },
   "soroban-25": { name: "ヨワリ", line: "6けたの わりざん、さすが！" },
   "soroban-26": { name: "ヨツバ", line: "4きゅうの しけん、いくぞ！" },
+  "shisoku-1": { name: "ポムポ", line: "たして ひいて ぽん！" },
+  "shisoku-2": { name: "ケタロ", line: "2けたも へっちゃらだよ" },
+  "shisoku-3": { name: "ククルン", line: "くくで ぽんぽん！" },
+  "shisoku-4": { name: "ゴチャモ", line: "ぜんぶ まぜても だいじょうぶ！" },
 };
 
 // 色の呼び名は設計書の付録B

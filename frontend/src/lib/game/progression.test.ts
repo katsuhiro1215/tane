@@ -14,9 +14,21 @@ import {
 } from "@/lib/game/progression";
 
 /** あそび mode の1〜n番目に★value を付けた記録 */
-function cleared(mode: ModeId, n: number, value: 1 | 2 | 3 = 3): StarMap {
+function cleared(mode: ModeId, n: number, value: 1 | 2 | 3 | 4 | 5 = 3): StarMap {
   return Object.fromEntries(stagesOfMode(mode).slice(0, n).map((s) => [s.id, value]));
 }
+
+describe("しそくえんざん（★5・★3で次が開く）", () => {
+  it("前のステージが★3になるまで、次は閉じたまま", () => {
+    expect(isUnlocked(getStage("shisoku-2")!, { "shisoku-1": 2 })).toBe(false);
+    expect(isUnlocked(getStage("shisoku-2")!, { "shisoku-1": 3 })).toBe(true);
+  });
+
+  it("★の合計の最大は、1ステージ5で数える", () => {
+    expect(modeStarSummary("shisoku", {})).toEqual({ earned: 0, max: 20 });
+    expect(modeStarSummary("shisoku", { "shisoku-1": 5, "shisoku-2": 4 })).toEqual({ earned: 9, max: 20 });
+  });
+});
 
 describe("isUnlocked", () => {
   it("1つ目はいつも開いている", () => {
@@ -69,13 +81,17 @@ describe("continueTarget（設計書3.5）", () => {
     expect(continueTarget(stars, "flash").id).toBe("flash-2");
   });
 
-  it("3. そのあそびが全部★3なら、次のあそびへ（フラッシュの次はたしざん）", () => {
-    expect(continueTarget(cleared("flash", 6), "flash").id).toBe("add-1");
+  it("3. そのあそびが全部★3なら、次のあそびへ（フラッシュの次は、まだ遊んでいないしそくえんざん）", () => {
+    expect(continueTarget(cleared("flash", 6), "flash").id).toBe("shisoku-1");
+    expect(continueTarget({ ...cleared("flash", 6), ...cleared("shisoku", 4, 5) } as StarMap, "flash").id).toBe("add-1");
     expect(continueTarget(cleared("add", 12), "add").id).toBe("sub-1");
   });
 
   it("4. 全部★3なら、最後に遊んだあそびのボス", () => {
-    const all = Object.assign({}, ...(["add", "sub", "mul", "div", "flash"] as const).map((m) => cleared(m, 12))) as StarMap;
+    const all = Object.assign(
+      { ...cleared("shisoku", 4, 5) },
+      ...(["add", "sub", "mul", "div", "flash"] as const).map((m) => cleared(m, 12))
+    ) as StarMap;
     expect(continueTarget(all, "mul").id).toBe("mul-12");
   });
 });
@@ -118,7 +134,7 @@ describe("そろばん（設計書2.3・2.4）", () => {
   });
 
   it("そろばんは、最後に遊んだあそびのときだけ続きを探す（四則演算・フラッシュは飛ばない）", () => {
-    expect(continueTarget(cleared("flash", 6), "flash").id).toBe("add-1");
+    expect(continueTarget({ ...cleared("flash", 6), ...cleared("shisoku", 4, 5) } as StarMap, "flash").id).toBe("add-1");
     expect(continueTarget({}, undefined).id).toBe("add-1");
   });
 

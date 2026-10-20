@@ -7,12 +7,13 @@ import { colorForStage, type SpruColor } from "./colors";
 import { DIV_STAGE_SPECS } from "./div";
 import { FLASH_STAGE_SPECS } from "./flash";
 import { MUL_STAGE_SPECS } from "./mul";
+import { SHISOKU_STAGE_SPECS, type SeedStageRule } from "./shisoku";
 import { SOROBAN_STAGE_SPECS } from "./soroban";
 import type { StageSpec } from "./spec";
 import { SUB_STAGE_SPECS } from "./sub";
 
-export type ModeId = "add" | "sub" | "mul" | "div" | "flash" | "soroban";
-export const MODE_IDS: readonly ModeId[] = ["add", "sub", "mul", "div", "flash", "soroban"];
+export type ModeId = "add" | "sub" | "mul" | "div" | "flash" | "soroban" | "shisoku";
+export const MODE_IDS: readonly ModeId[] = ["add", "sub", "mul", "div", "flash", "soroban", "shisoku"];
 
 export interface ModeDefinition {
   readonly id: ModeId;
@@ -27,6 +28,7 @@ export const MODES: Record<ModeId, ModeDefinition> = {
   div: { id: "div", label: "わりざん", symbol: "÷" },
   flash: { id: "flash", label: "フラッシュ", symbol: null },
   soroban: { id: "soroban", label: "そろばん", symbol: null },
+  shisoku: { id: "shisoku", label: "しそくえんざん", symbol: null },
 };
 
 export const PROBLEMS_PER_STAGE = 20;
@@ -40,6 +42,8 @@ export const SECONDS_PER_PROBLEM: Record<ModeId, readonly number[]> = {
   flash: [5, 5, 5, 6, 5, 8],
   // そろばんは級・種目の式で決めるので、ここは使わない（soroban-rules.ts の secondsFor）
   soroban: [],
+  // しそくえんざんは種の降る時間（stage.rule.fallMs）で決めるので、ここは使わない
+  shisoku: [],
 };
 
 interface StageBase {
@@ -70,9 +74,14 @@ export interface SorobanStage extends StageBase {
   readonly rule: SorobanRule;
 }
 
-export type Stage = ArithmeticStage | FlashStage | SorobanStage;
+export interface SeedStage extends StageBase {
+  readonly kind: "seed";
+  readonly rule: SeedStageRule;
+}
 
-const BOSS_COLORS: Record<Exclude<ModeId, "soroban">, SpruColor> = {
+export type Stage = ArithmeticStage | FlashStage | SorobanStage | SeedStage;
+
+const BOSS_COLORS: Record<Exclude<ModeId, "soroban" | "shisoku">, SpruColor> = {
   add: "crystal",
   sub: "platinum",
   mul: "obsidian",
@@ -82,7 +91,10 @@ const BOSS_COLORS: Record<Exclude<ModeId, "soroban">, SpruColor> = {
 const SOROBAN_BOSS_COLORS: readonly SpruColor[] = ["crystal", "platinum", "obsidian"];
 
 function colorFor(mode: ModeId, index: number, isBoss: boolean): SpruColor {
-  if (isBoss) return mode === "soroban" ? SOROBAN_BOSS_COLORS[index % SOROBAN_BOSS_COLORS.length] : BOSS_COLORS[mode];
+  if (isBoss) {
+    if (mode === "soroban") return SOROBAN_BOSS_COLORS[index % SOROBAN_BOSS_COLORS.length];
+    if (mode !== "shisoku") return BOSS_COLORS[mode];
+  }
   return colorForStage(MODE_IDS.indexOf(mode), index);
 }
 
@@ -112,6 +124,19 @@ function build<R>(
 const arithmetic = (base: StageBase, rule: ArithmeticRule): Stage => ({ ...base, kind: "arithmetic", rule });
 const flash = (base: StageBase, rule: FlashRule): Stage => ({ ...base, kind: "flash", rule });
 
+const seed: Stage[] = SHISOKU_STAGE_SPECS.map((spec, index) => ({
+  id: `shisoku-${index + 1}`,
+  mode: "shisoku",
+  number: index + 1,
+  name: spec.name,
+  description: spec.description,
+  color: colorFor("shisoku", index, false),
+  isBoss: false,
+  secondsPerProblem: spec.rule.fallMs / 1000,
+  kind: "seed",
+  rule: spec.rule,
+}));
+
 const soroban: Stage[] = SOROBAN_STAGE_SPECS.map((spec, index) => {
   const isBoss = spec.event === "mogi";
   const rule: SorobanRule = { grade: spec.grade, event: spec.event };
@@ -138,6 +163,7 @@ export const STAGES: readonly Stage[] = [
   ...build("div", DIV_STAGE_SPECS, arithmetic),
   ...build("flash", FLASH_STAGE_SPECS, flash),
   ...soroban,
+  ...seed,
 ];
 
 const STAGE_BY_ID = new Map(STAGES.map((stage) => [stage.id, stage]));
@@ -162,6 +188,7 @@ export function isModeId(value: string): value is ModeId {
 
 export function playPath(stage: Stage): string {
   if (stage.kind === "soroban") return `/soroban/${stage.id}`;
+  if (stage.kind === "seed") return `/seed/${stage.id}`;
   return stage.kind === "flash" ? `/flash/${stage.id}` : `/stage/${stage.id}`;
 }
 
@@ -178,4 +205,19 @@ export function stageTargetMs(stage: Stage): number | null {
 export function targetMs(stage: Stage): number {
   if (stage.kind === "soroban") return sorobanTargetMs(stage.rule);
   return stage.secondsPerProblem * 1000 * PROBLEMS_PER_STAGE;
+}
+
+/** そのステージで取れる★の最大。しそくえんざんだけ5 */
+export function maxStars(stage: Stage): 3 | 5 {
+  return stage.kind === "seed" ? 5 : 3;
+}
+
+/** 次のステージが開くのに必要な、このステージの★ */
+export function unlockStars(stage: Stage): 1 | 3 {
+  return stage.kind === "seed" ? 3 : 1;
+}
+
+/** 画面に出すステージの番号。しそくえんざんは「1-1」の形 */
+export function displayNumber(stage: Stage): string {
+  return stage.kind === "seed" ? `1-${stage.number}` : String(stage.number);
 }

@@ -1,11 +1,10 @@
-import { getStage, MODE_IDS, STAGES, stagesOfMode, type ModeId, type Stage } from "@/data/stages/catalog";
+import { getStage, MODE_IDS, maxStars, STAGES, stagesOfMode, unlockStars, type ModeId, type Stage } from "@/data/stages/catalog";
 import type { EarnedStars, Stars } from "@/lib/game/stars";
 
 export type StarMap = Readonly<Partial<Record<string, EarnedStars>>>;
 
 export const CHALLENGE_UNLOCK_STARS = 30;
 export const GARDEN_LIMIT = 8;
-const MAX_STARS = 3;
 
 export function starsOf(stars: StarMap, stageId: string): Stars {
   return stars[stageId] ?? 0;
@@ -16,7 +15,7 @@ export function isUnlocked(stage: Stage, stars: StarMap): boolean {
   if (stage.kind === "soroban" && stage.event === "mitori") return true;
   if (stage.number === 1) return true;
   const previous = stagesOfMode(stage.mode)[stage.number - 2];
-  return starsOf(stars, previous.id) >= 1;
+  return starsOf(stars, previous.id) >= unlockStars(previous);
 }
 
 export function totalStars(stars: StarMap): number {
@@ -31,7 +30,7 @@ export function modeStarSummary(mode: ModeId, stars: StarMap): { earned: number;
   const list = stagesOfMode(mode);
   return {
     earned: list.reduce((sum, stage) => sum + starsOf(stars, stage.id), 0),
-    max: list.length * MAX_STARS,
+    max: list.reduce((sum, stage) => sum + maxStars(stage), 0),
   };
 }
 
@@ -52,7 +51,7 @@ export function sorobanNextStage(stars: StarMap): Stage {
   const inGrade = list.filter((stage) => gradeOf(stage) === grade);
   return (
     inGrade.find((stage) => isUnlocked(stage, stars) && starsOf(stars, stage.id) === 0) ??
-    inGrade.find((stage) => starsOf(stars, stage.id) < MAX_STARS) ??
+    inGrade.find((stage) => starsOf(stars, stage.id) < maxStars(stage)) ??
     list.find((stage) => gradeOf(stage) === grade - 1 && stage.kind === "soroban" && stage.event === "mitori") ??
     list[list.length - 1]
   );
@@ -61,12 +60,12 @@ export function sorobanNextStage(stars: StarMap): Stage {
 function nextToPlayInMode(mode: ModeId, stars: StarMap): Stage | undefined {
   if (mode === "soroban") {
     const next = sorobanNextStage(stars);
-    return starsOf(stars, next.id) < MAX_STARS ? next : undefined;
+    return starsOf(stars, next.id) < maxStars(next) ? next : undefined;
   }
   const list = stagesOfMode(mode);
   return (
     list.find((stage) => isUnlocked(stage, stars) && starsOf(stars, stage.id) === 0) ??
-    list.find((stage) => starsOf(stars, stage.id) < MAX_STARS)
+    list.find((stage) => starsOf(stars, stage.id) < maxStars(stage))
   );
 }
 
