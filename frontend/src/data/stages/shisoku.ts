@@ -1,4 +1,5 @@
 import { range, type ArithmeticRule } from "@/lib/game/problem-rules";
+import type { DivModRule } from "@/lib/game/remainder-division";
 
 import { ADD_STAGE_SPECS } from "./add";
 import { SUB_STAGE_SPECS } from "./sub";
@@ -22,6 +23,8 @@ export interface SeedStageRule {
   readonly roundMs?: number;
   /** 筆算（縦書き）で表示する */
   readonly layout?: "flat" | "column";
+  /** あまりのあるわり算（商とあまりを別々に答える、降らない専用の遊び）。あるときは rule.rule は使わない */
+  readonly pair?: DivModRule;
 }
 
 /** 1つのグループのステージ数。表示の番号は「グループ-その中の番号」（1-1〜1-4、2-1〜…） */
