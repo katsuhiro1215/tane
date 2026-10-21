@@ -18,7 +18,7 @@ function WideLink({ mode, icon: Icon, subtitle, stars }: { mode: ModeId; icon: L
   return (
     <Link
       href={`/mode/${mode}`}
-      className={cn(appButtonVariants({ variant: "cream" }), "col-span-3 h-14 justify-start gap-3 px-4 text-base")}
+      className={cn(appButtonVariants({ variant: "cream" }), "col-span-2 h-14 justify-start gap-3 px-4 text-base")}
     >
       <Icon className="h-6 w-6 shrink-0" strokeWidth={2.5} />
       <span className="flex flex-1 flex-col items-start leading-tight">
@@ -47,14 +47,17 @@ export function ModeButtons({ stars }: { stars: StarMap }) {
     timerRef.current = setTimeout(() => setNotice(null), NOTICE_MS);
   }
 
+  const BASIC_MODES = MODE_IDS.filter((id) => id === "add" || id === "sub" || id === "mul" || id === "div");
   return (
-    <section aria-label="あそびを えらぶ" className="relative mt-4 grid grid-cols-3 gap-2 px-4">
+    <section aria-label="あそびを えらぶ" className="relative mt-4 grid grid-cols-2 gap-2 px-4">
+      {/* メインは「たねまき」。分野が混ざって、だんだん進む */}
       <WideLink mode="shisoku" icon={Sprout} subtitle="たねが ふってくる！" stars={stars} />
-      {MODE_IDS.filter((id) => id !== "soroban" && id !== "shisoku").map((id) => {
+      <h2 className="col-span-2 mt-2 font-display text-sm font-black text-primary">きそ・きほん（ぶんやべつ）</h2>
+      {BASIC_MODES.map((id) => {
         const summary = modeStarSummary(id, stars);
         return (
           <Link key={id} href={`/mode/${id}`} className={cn(appButtonVariants({ variant: "cream" }), TILE)}>
-            <span className="text-2xl leading-none">{MODES[id].symbol ?? <Zap className="h-6 w-6" fill="currentColor" />}</span>
+            <span className="text-2xl leading-none">{MODES[id].symbol}</span>
             {MODES[id].label}
             <span className="text-[10px] text-[#c98a1b]">
               ★ {summary.earned}/{summary.max}
@@ -63,19 +66,24 @@ export function ModeButtons({ stars }: { stars: StarMap }) {
         );
       })}
       {challengeOpen ? (
-        <Link href="/challenge" className={cn(appButtonVariants({ variant: "warning" }), TILE)}>
+        <Link href="/challenge" className={cn(appButtonVariants({ variant: "warning" }), TILE, "col-span-2 flex-row gap-2")}>
           <Timer className="h-6 w-6" />
           チャレンジ
           <span className="text-[10px]">60びょう</span>
         </Link>
       ) : (
-        <button type="button" onClick={showLockedNotice} className={cn(appButtonVariants({ variant: "locked" }), TILE)}>
+        <button
+          type="button"
+          onClick={showLockedNotice}
+          className={cn(appButtonVariants({ variant: "locked" }), TILE, "col-span-2 flex-row gap-2")}
+        >
           <Timer className="h-6 w-6" />
           チャレンジ
           <span className="text-[10px]">★{CHALLENGE_UNLOCK_STARS}で ひらくよ</span>
         </button>
       )}
-      {/* そろばんは、検定の級ごとに遊ぶので、横長のボタンにして別に置く */}
+      <h2 className="col-span-2 mt-2 font-display text-sm font-black text-primary">べつの あそび</h2>
+      <WideLink mode="flash" icon={Zap} subtitle="ぱっと みて こたえる" stars={stars} />
       <WideLink mode="soroban" icon={Calculator} subtitle="10きゅう〜4きゅう" stars={stars} />
       {notice && (
         <p

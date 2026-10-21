@@ -28,7 +28,7 @@ export const MODES: Record<ModeId, ModeDefinition> = {
   div: { id: "div", label: "わりざん", symbol: "÷" },
   flash: { id: "flash", label: "フラッシュ", symbol: null },
   soroban: { id: "soroban", label: "そろばん", symbol: null },
-  shisoku: { id: "shisoku", label: "しそくえんざん", symbol: null },
+  shisoku: { id: "shisoku", label: "たねまき", symbol: null },
 };
 
 export const PROBLEMS_PER_STAGE = 20;
