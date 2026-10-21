@@ -26,9 +26,9 @@ const N = 2000;
 const arithmetic = STAGES.filter((s): s is Extract<Stage, { kind: "arithmetic" }> => s.kind === "arithmetic");
 
 describe("ステージの数とid", () => {
-  it("全部で164、あそびごとに12・12・12・12・6・26・84", () => {
-    expect(STAGES).toHaveLength(164);
-    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 84]);
+  it("全部で180、あそびごとに12・12・12・12・6・26・100", () => {
+    expect(STAGES).toHaveLength(180);
+    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 100]);
   });
 
   it("idは `<あそび>-<番号>` で重複しない", () => {
@@ -189,8 +189,8 @@ describe("目安の秒数と目標タイム（設計書2.5）", () => {
 describe("しそくえんざん（種が降る）", () => {
   const list = stagesOfMode("shisoku");
 
-  it("84ステージで、idは shisoku-1〜84、遊ぶ場所は /seed/", () => {
-    expect(list.map((s) => s.id)).toEqual(Array.from({ length: 84 }, (_, i) => `shisoku-${i + 1}`));
+  it("100ステージで、idは shisoku-1〜100、遊ぶ場所は /seed/", () => {
+    expect(list.map((s) => s.id)).toEqual(Array.from({ length: 100 }, (_, i) => `shisoku-${i + 1}`));
     expect(playPath(list[0])).toBe("/seed/shisoku-1");
     expect(list.every((s) => s.kind === "seed" && !s.isBoss)).toBe(true);
   });
@@ -238,7 +238,21 @@ describe("しそくえんざん（種が降る）", () => {
     expect(list.slice(72, 76).map((s) => s.description)).toEqual(Array(4).fill("よんそく ごちゃまぜ（2けた）"));
     expect(list.slice(76, 80).map((s) => s.description)).toEqual(Array(4).fill("かけざん 2けた×2けた"));
     expect(list.slice(80, 84).map((s) => s.description)).toEqual(Array(4).fill("わりざん あまりあり（むずかしい）"));
+    expect(list.slice(84, 100).map((s) => displayNumber(s))).toEqual([
+      "22-1", "22-2", "22-3", "22-4", "23-1", "23-2", "23-3", "23-4",
+      "24-1", "24-2", "24-3", "24-4", "25-1", "25-2", "25-3", "25-4",
+    ]);
+    expect(list.slice(84, 88).map((s) => s.description)).toEqual(Array(4).fill("わりざん 大きい数"));
+    expect(list.slice(88, 92).map((s) => s.description)).toEqual(Array(4).fill("よんそく ぜんぶ むしくい"));
+    expect(list.slice(92, 96).map((s) => s.description)).toEqual(Array(4).fill("大きい数 ごちゃまぜ"));
+    expect(list.slice(96, 100).map((s) => s.description)).toEqual(Array(4).fill("ボス：ぜんぶ まぜまぜ"));
     expect(displayNumber(getStage("add-3")!)).toBe("3");
+  });
+
+  it("G25（ボス）は、しそくえんざんの中でいちばん広い範囲を混ぜる", () => {
+    const boss = list[99];
+    if (boss.kind !== "seed") throw new Error("seed stage expected");
+    expect(boss.rule.rule.op).toBe("mix");
   });
 
   it("G20は4ステージで出し方が変わる（ふつう・筆算・むしくい・まぜこぜ）。同じステージでは混ぜない", () => {

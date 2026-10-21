@@ -171,6 +171,22 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "shisoku-82": { name: "ジュウイチ", line: "11から わるよ" },
   "shisoku-83": { name: "ムズカシアマリ", line: "むずかしい あまりも へいき" },
   "shisoku-84": { name: "アマリタツジン", line: "あまりの めいじんに なったよ" },
+  "shisoku-85": { name: "サンワリ", line: "3けたを 2けたで わるよ" },
+  "shisoku-86": { name: "オオキイワリ", line: "おおきい わりざんも へいき" },
+  "shisoku-87": { name: "ミツケルワリ", line: "わりざんの？も みつけよう" },
+  "shisoku-88": { name: "サンケタノ", line: "3けたでも さがせるよ" },
+  "shisoku-89": { name: "ヨンソクムシ", line: "たしひきの？が まざるよ" },
+  "shisoku-90": { name: "カケワリムシ", line: "かけわりの？も でてくるよ" },
+  "shisoku-91": { name: "サンシュムシ", line: "みっつの けいさんが まざるよ" },
+  "shisoku-92": { name: "ゼンブムシ", line: "よっつ ぜんぶの？だよ" },
+  "shisoku-93": { name: "オオキイマゼ", line: "おおきい かずが まざるよ" },
+  "shisoku-94": { name: "カケワリオオキイ", line: "かけわりの おおきい かずも" },
+  "shisoku-95": { name: "サンジュウ", line: "3しゅるい まざっても へいき" },
+  "shisoku-96": { name: "ヨンジュウ", line: "4しゅるい ぜんぶ まざるよ" },
+  "shisoku-97": { name: "チョウセンシャ", line: "たねまきの ちょうせんしゃだよ" },
+  "shisoku-98": { name: "サイキョウ", line: "もっと むずかしくても！" },
+  "shisoku-99": { name: "タシヒキオウ", line: "たしざん ひきざんの おうさま" },
+  "shisoku-100": { name: "タネマキオウ", line: "たねまき100、せいはしたね！" },
 };
 
 // 色の呼び名は設計書の付録B
