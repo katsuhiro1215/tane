@@ -3,6 +3,27 @@ import { describe, expect, it } from "vitest";
 import { oneOf, range, type ArithmeticRule } from "@/lib/game/problem-rules";
 import { drawBlankSeedProblem, drawSeedProblem, toBlankProblem, toSeedProblem } from "@/lib/game/seed-problems";
 
+describe("toSeedProblem（筆算）", () => {
+  it("layout が column のとき、display に縦書きの情報を持つ", () => {
+    expect(toSeedProblem({ operator: "add", operandA: 23, operandB: 45, answer: 68 }, "column")).toEqual({
+      text: "23 ＋ 45",
+      answer: 68,
+      display: { a: 23, b: 45, operator: "add" },
+    });
+  });
+
+  it("layout を省略すると display が無い（今までどおり）", () => {
+    const flat = toSeedProblem({ operator: "add", operandA: 23, operandB: 45, answer: 68 });
+    expect(flat).toEqual({ text: "23 ＋ 45", answer: 68 });
+    expect(flat.display).toBeUndefined();
+  });
+
+  it("drawSeedProblem に layout を渡すと、種の問題にも display が付く", () => {
+    const p = drawSeedProblem({ op: "add", a: range(1, 9), b: range(1, 9) }, { answers: [], texts: [] }, Math.random, "column");
+    expect(p.display).toBeDefined();
+  });
+});
+
 describe("toSeedProblem", () => {
   it("4つの演算を式の文字と答えにする", () => {
     expect(toSeedProblem({ operator: "add", operandA: 3, operandB: 4, answer: 7 })).toEqual({ text: "3 ＋ 4", answer: 7 });

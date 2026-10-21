@@ -18,6 +18,8 @@ export interface SeedFieldConfig {
   blank?: boolean;
   /** 1回の制限時間（1分モード）。省略は60秒 */
   roundMs?: number;
+  /** 筆算（縦書き）で表示する。虫食い（blank）とは同時に使わない */
+  layout?: "flat" | "column";
 }
 
 export interface Seed {
@@ -44,15 +46,13 @@ function spawn(field: SeedField, config: SeedFieldConfig, rng: Rng): SeedField {
   const free = Array.from({ length: SEED_LANES }, (_, lane) => lane).filter((lane) => !taken.has(lane));
   if (free.length === 0) return field;
   const lane = free[Math.floor(rng() * free.length)];
-  const draw = config.blank ? drawBlankSeedProblem : drawSeedProblem;
-  const problem = draw(
-    config.rule,
-    {
-      answers: field.seeds.map((s) => s.problem.answer),
-      texts: [...field.seeds.map((s) => s.problem.text), ...(field.previousText ? [field.previousText] : [])],
-    },
-    rng
-  );
+  const avoid = {
+    answers: field.seeds.map((s) => s.problem.answer),
+    texts: [...field.seeds.map((s) => s.problem.text), ...(field.previousText ? [field.previousText] : [])],
+  };
+  const problem = config.blank
+    ? drawBlankSeedProblem(config.rule, avoid, rng)
+    : drawSeedProblem(config.rule, avoid, rng, config.layout);
   const seed: Seed = { id: field.nextId, lane, problem, ageMs: 0, progress: 0 };
   return { ...field, seeds: [...field.seeds, seed], nextId: field.nextId + 1, sinceSpawnMs: 0 };
 }

@@ -20,6 +20,8 @@ export interface SeedStageRule {
   readonly single?: boolean;
   /** 1分モードの制限時間。省略は60秒 */
   readonly roundMs?: number;
+  /** 筆算（縦書き）で表示する */
+  readonly layout?: "flat" | "column";
 }
 
 /** 1つのグループのステージ数。表示の番号は「グループ-その中の番号」（1-1〜1-4、2-1〜…） */

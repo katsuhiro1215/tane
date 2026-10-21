@@ -1,9 +1,11 @@
-import { generateProblem, OPERATOR_SYMBOL, type ArithmeticRule, type Problem } from "@/lib/game/problem-rules";
+import { generateProblem, OPERATOR_SYMBOL, type ArithmeticRule, type Operator, type Problem } from "@/lib/game/problem-rules";
 
 /** 種に書く問題。今後の「穴あき」などの型も、この形で返す */
 export interface SeedProblem {
   text: string;
   answer: number;
+  /** 筆算（縦書き）で表示するための情報。無ければ横書き（text）のまま表示する */
+  display?: { a: number; b: number; operator: Operator };
 }
 
 export interface SeedAvoid {
@@ -13,11 +15,13 @@ export interface SeedAvoid {
 
 const MAX_REDRAWS = 20;
 
-export function toSeedProblem(problem: Problem): SeedProblem {
-  return {
+export function toSeedProblem(problem: Problem, layout?: "flat" | "column"): SeedProblem {
+  const base: SeedProblem = {
     text: `${problem.operandA} ${OPERATOR_SYMBOL[problem.operator]} ${problem.operandB}`,
     answer: problem.answer,
   };
+  if (layout !== "column") return base;
+  return { ...base, display: { a: problem.operandA, b: problem.operandB, operator: problem.operator } };
 }
 
 /** 虫食い。片方の数を？にして、その数を答えにする（例：3 ＋ ？ ＝ 7 → 4）。rng が0.5より小さいと左の数を隠す */
@@ -39,10 +43,16 @@ function drawWith(convert: Convert, rule: ArithmeticRule, avoid: SeedAvoid, rng:
 }
 
 /** 避ける答え・式を出さないように引き直す。避けられないルールでは、避けずに返す */
-export function drawSeedProblem(rule: ArithmeticRule, avoid: SeedAvoid, rng: () => number = Math.random): SeedProblem {
-  return drawWith((problem) => toSeedProblem(problem), rule, avoid, rng);
+export function drawSeedProblem(
+  rule: ArithmeticRule,
+  avoid: SeedAvoid,
+  rng: () => number = Math.random,
+  layout?: "flat" | "column"
+): SeedProblem {
+  return drawWith((problem) => toSeedProblem(problem, layout), rule, avoid, rng);
 }
 
 export function drawBlankSeedProblem(rule: ArithmeticRule, avoid: SeedAvoid, rng: () => number = Math.random): SeedProblem {
+  // 虫食いは layout（筆算）の対象外。呼び出し側のシグネチャをそろえるためだけに同じ形にはしない
   return drawWith(toBlankProblem, rule, avoid, rng);
 }

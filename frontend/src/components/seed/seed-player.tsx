@@ -73,6 +73,7 @@ export function SeedPlayer({ stageId }: { stageId: string }) {
         single: stage.rule.single,
         blank: stage.rule.blank,
         roundMs: stage.rule.roundMs,
+        layout: stage.rule.layout,
       }
     : null;
   const speed = useSpeedPlay({

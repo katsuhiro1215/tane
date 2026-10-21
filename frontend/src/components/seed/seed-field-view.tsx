@@ -1,9 +1,16 @@
 import Image from "next/image";
 
+import { ColumnProblem } from "@/components/seed/column-problem";
 import type { SpruColor } from "@/data/stages/colors";
 import { SEED_LANES, type Seed } from "@/lib/game/seed-field";
 import { growthImage } from "@/lib/spru-images";
 import { cn } from "@/lib/utils";
+
+/** 問題の中身。display があれば筆算（縦書き）、無ければ横書きの式 */
+function ProblemBody({ problem }: { problem: Seed["problem"] }) {
+  if (problem.display) return <ColumnProblem {...problem.display} />;
+  return <span className="px-1 text-center whitespace-nowrap">{problem.text}</span>;
+}
 
 const SEED_PX = 84;
 const DANGER_FROM = 0.8;
@@ -67,7 +74,7 @@ export function SeedFieldView({
           )}
           style={{ left: laneLeft(seed.lane), top: seedTop(seed.progress), width: SEED_PX, height: SEED_PX }}
         >
-          <span className="px-1 text-center whitespace-nowrap">{seed.problem.text}</span>
+          <ProblemBody problem={seed.problem} />
         </button>
       ))}
     </div>
@@ -95,7 +102,7 @@ function SingleProblemView({ seeds, blooms, color }: { seeds: readonly Seed[]; b
           aria-label={seed.problem.text}
           className="animate-pop-in rounded-3xl border-b-4 border-[#5e3a17] bg-[#9a6a35] px-6 py-5 text-center font-display text-4xl font-black whitespace-nowrap text-white shadow-md"
         >
-          {seed.problem.text}
+          <ProblemBody problem={seed.problem} />
         </p>
       )}
     </div>

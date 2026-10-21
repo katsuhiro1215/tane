@@ -137,3 +137,15 @@ describe("single（1問ずつ出す）", () => {
     expect(tick(answered, MAX_TICK_MS, single, 0).field.seeds).toHaveLength(1);
   });
 });
+
+describe("layout（筆算）", () => {
+  it("config.layout が column のとき、種の問題に display が付く", () => {
+    const field = createField({ ...config, layout: "column" });
+    expect(field.seeds[0].problem.display).toBeDefined();
+  });
+
+  it("layout を省略すると display が無い", () => {
+    const field = createField(config);
+    expect(field.seeds[0].problem.display).toBeUndefined();
+  });
+});
