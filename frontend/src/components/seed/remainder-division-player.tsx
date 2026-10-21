@@ -64,6 +64,9 @@ export function RemainderDivisionPlayer({ stageId }: { stageId: string }) {
   const endedRef = useRef(false);
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const problemStartRef = useRef(0);
+  // rAF のループは [phase, mode] が変わったときしか作り直さないため、中の endRun をそのまま閉じ込めると
+  // 古い描画の speed.finish（＝古い session）を呼んでしまう。ref 経由で、常に最新の endRun を呼ぶ
+  const endRunRef = useRef<(finished: DivModRun) => void>(() => {});
 
   const rule: DivModRule | null = stage ? stage.rule.pair! : null;
   const roundMs = stage ? (stage.rule.roundMs ?? SEED_ROUND_MS) : SEED_ROUND_MS;
@@ -103,7 +106,7 @@ export function RemainderDivisionPlayer({ stageId }: { stageId: string }) {
         const next = stepDivModRun(current, now - last, roundMs);
         runRef.current = next;
         setRun(next);
-        if (next.status !== "playing" && !endedRef.current) endRun(next);
+        if (next.status !== "playing" && !endedRef.current) endRunRef.current(next);
       }
       last = now;
       frame = requestAnimationFrame(loop);
@@ -148,6 +151,11 @@ export function RemainderDivisionPlayer({ stageId }: { stageId: string }) {
       setNewFriendOpen(next.mode === "minute" && next.before === 0 && next.stars > 0);
     }, ENDING_MS);
   }
+
+  // 毎回の描画で最新の endRun を ref に入れ直す（rAF ループから、常に最新の speed.finish を呼べるようにする）
+  useEffect(() => {
+    endRunRef.current = endRun;
+  });
 
   if (!stage || !rule) return <StageNotFound />;
   const current = stage;
