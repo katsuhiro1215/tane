@@ -44,8 +44,10 @@ export function useSpeedPlay({ secondsPerProblem, answerable, questionKey }: Opt
     };
   }, [clock]);
 
-  function submit(correct: boolean, remainingAfter: number, bonusPoints = 0): AnswerOutcome {
-    const outcome = answer(session, { correct, elapsedMs: clock.stop(), secondsPerProblem, remainingAfter, bonusPoints });
+  /** elapsedMs を渡すと、時計の代わりにその値を使う（種が降るあそびは、種ごとに経過時間が違う） */
+  function submit(correct: boolean, remainingAfter: number, bonusPoints = 0, elapsedMs?: number): AnswerOutcome {
+    const elapsed = elapsedMs ?? clock.stop();
+    const outcome = answer(session, { correct, elapsedMs: elapsed, secondsPerProblem, remainingAfter, bonusPoints });
     setSession(outcome.session);
     setLastGain(
       outcome.gained > 0 ? { amount: outcome.gained, doubled: outcome.inFever, key: outcome.session.answered } : null

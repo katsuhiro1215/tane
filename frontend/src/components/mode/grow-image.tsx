@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useEffect, useState, type CSSProperties } from "react";
 
 import { useSound } from "@/components/app/sound-provider";
-import type { SpruColor } from "@/data/stages/colors";
-import { growthForStars, type Stars } from "@/lib/game/stars";
+import type { Stage } from "@/data/stages/catalog";
+import { growthForStage, type Stars } from "@/lib/game/stars";
 import { prefersReducedMotion } from "@/lib/motion";
 import { growthImage } from "@/lib/spru-images";
 
@@ -20,7 +20,7 @@ const SPARKLES = [
 const SWAP_MS = 450;
 
 /** 前の育ち具合が縮んで消え、次の育ち具合が弾むように出てキラキラが散る */
-export function GrowImage({ color, from, to }: { color: SpruColor; from: Stars; to: Stars }) {
+export function GrowImage({ stage, from, to }: { stage: Stage; from: Stars; to: Stars }) {
   const { play } = useSound();
   // この部品は ssr: false の画面の中でだけ使うので、初期値で window を見てよい
   const [phase, setPhase] = useState<"before" | "after">(() => (prefersReducedMotion() ? "after" : "before"));
@@ -39,7 +39,7 @@ export function GrowImage({ color, from, to }: { color: SpruColor; from: Stars; 
     return (
       <Image
         key="before"
-        src={growthImage(color, growthForStars(from))}
+        src={growthImage(stage.color, growthForStage(stage, from))}
         alt=""
         width={56}
         height={70}
@@ -51,7 +51,7 @@ export function GrowImage({ color, from, to }: { color: SpruColor; from: Stars; 
     <span className="relative flex h-14 items-end justify-center">
       <Image
         key="after"
-        src={growthImage(color, growthForStars(to))}
+        src={growthImage(stage.color, growthForStage(stage, to))}
         alt=""
         width={56}
         height={70}

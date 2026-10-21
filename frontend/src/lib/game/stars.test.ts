@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { growthForStars, missedThreeByMs, mistakesOf, starsForResult, type StageResultInput } from "@/lib/game/stars";
+import { getStage } from "@/data/stages/catalog";
+import {
+  growthForStage,
+  growthForStars,
+  missedThreeByMs,
+  mistakesOf,
+  starsForResult,
+  type Stars,
+  type StageResultInput,
+} from "@/lib/game/stars";
 
 const result = (overrides: Partial<StageResultInput>): StageResultInput => ({
   status: "cleared",
@@ -63,5 +72,18 @@ describe("時間なしのステージ（targetMs が null）", () => {
 
   it("「あと○びょう」は出ない", () => {
     expect(missedThreeByMs(result({ targetMs: null, elapsedMs: 9_999_999 }))).toBeNull();
+  });
+});
+
+describe("growthForStage", () => {
+  it("既存のステージは ★1芽・★2つぼみ・★3花", () => {
+    const add = getStage("add-1")!;
+    expect([0, 1, 2, 3].map((n) => growthForStage(add, n as Stars))).toEqual(["seed", "sprout", "bud", "flower"]);
+  });
+  it("しそくえんざんは ★1〜2芽・★3つぼみ・★4〜5花", () => {
+    const seed = getStage("shisoku-1")!;
+    expect([0, 1, 2, 3, 4, 5].map((n) => growthForStage(seed, n as Stars))).toEqual([
+      "seed", "sprout", "sprout", "bud", "flower", "flower",
+    ]);
   });
 });

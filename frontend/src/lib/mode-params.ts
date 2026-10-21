@@ -21,7 +21,7 @@ export function parseModeSearchParams(mode: ModeId, searchParams: SearchParams):
   const requestedStageId = inMode(first(searchParams.stage));
   const grewStageId = inMode(first(searchParams.grew));
   const from = Number(first(searchParams.from));
-  const grewFrom: Stars = from === 1 || from === 2 ? from : 0;
+  const grewFrom: Stars = from === 1 || from === 2 || from === 3 || from === 4 ? from : 0;
 
   return {
     ...(requestedStageId ? { requestedStageId } : {}),

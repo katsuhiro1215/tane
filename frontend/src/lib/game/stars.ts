@@ -1,7 +1,8 @@
+import type { Stage } from "@/data/stages/catalog";
 import type { StageStatus } from "@/lib/game/stage";
 
-export type Stars = 0 | 1 | 2 | 3;
-export type EarnedStars = 1 | 2 | 3;
+export type Stars = 0 | 1 | 2 | 3 | 4 | 5;
+export type EarnedStars = 1 | 2 | 3 | 4 | 5;
 export type Growth = "seed" | "sprout" | "bud" | "flower";
 
 export interface StageResultInput {
@@ -29,8 +30,15 @@ export function mistakesOf(state: { currentIndex: number; correctCount: number }
   return state.currentIndex - state.correctCount;
 }
 
-const GROWTH_BY_STARS: Record<Stars, Growth> = { 0: "seed", 1: "sprout", 2: "bud", 3: "flower" };
+const GROWTH_BY_STARS: Record<Stars, Growth> = { 0: "seed", 1: "sprout", 2: "bud", 3: "flower", 4: "flower", 5: "flower" };
+// しそくえんざん（★5）の育ち。★3で初めてつぼみ、★4から花
+const GROWTH_BY_SEED_STARS: Record<Stars, Growth> = { 0: "seed", 1: "sprout", 2: "sprout", 3: "bud", 4: "flower", 5: "flower" };
 
 export function growthForStars(stars: Stars): Growth {
   return GROWTH_BY_STARS[stars];
+}
+
+/** ステージの育ち。しそくえんざんだけ、★の段階が違う */
+export function growthForStage(stage: Stage, stars: Stars): Growth {
+  return stage.kind === "seed" ? GROWTH_BY_SEED_STARS[stars] : growthForStars(stars);
 }

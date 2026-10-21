@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useSound } from "@/components/app/sound-provider";
 import { SPRU_LINES } from "@/data/spru-lines";
 import { gardenFriends, starsOf, type StarMap } from "@/lib/game/progression";
-import { growthForStars } from "@/lib/game/stars";
+import { growthForStage } from "@/lib/game/stars";
 import { growthImage, SPRU_POSES } from "@/lib/spru-images";
 
 // 育てたSpruを置く場所（左右に交互、手前ほど小さく）
@@ -44,7 +44,7 @@ export function Garden({ stars, chosen }: { stars: StarMap; chosen: readonly str
         return (
           <Image
             key={stage.id}
-            src={growthImage(stage.color, growthForStars(starsOf(stars, stage.id)))}
+            src={growthImage(stage.color, growthForStage(stage, starsOf(stars, stage.id)))}
             alt=""
             width={slot.width}
             height={Math.round(slot.width * 1.35)}

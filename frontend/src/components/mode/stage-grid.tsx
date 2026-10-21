@@ -6,9 +6,9 @@ import { Crown } from "lucide-react";
 
 import { StarsRow } from "@/components/app/stars-row";
 import { GrowImage } from "@/components/mode/grow-image";
-import type { Stage } from "@/data/stages/catalog";
+import { displayNumber, maxStars, type Stage } from "@/data/stages/catalog";
 import { isUnlocked, starsOf, type StarMap } from "@/lib/game/progression";
-import { growthForStars, type Stars } from "@/lib/game/stars";
+import { growthForStage, type Stars } from "@/lib/game/stars";
 import { growthImage } from "@/lib/spru-images";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,7 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
     <ul className="grid grid-cols-4 gap-2 px-4 pt-5 pb-6">
       {stages.map((stage, index) => {
         const gradeHeading = stage.kind === "soroban" && (index === 0 || stages[index - 1].kind !== "soroban" || (stages[index - 1] as typeof stage).grade !== stage.grade);
+        const groupHeading = stage.kind === "seed" && (index === 0 || stages[index - 1].description !== stage.description);
         const earned = starsOf(stars, stage.id);
         const unlocked = isUnlocked(stage, stars);
         const focused = stage.id === focusedId;
@@ -36,6 +37,11 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
           {gradeHeading && stage.kind === "soroban" && (
             <li aria-hidden className="col-span-4 mt-1 font-display text-sm font-black text-primary">
               {stage.grade}きゅう
+            </li>
+          )}
+          {groupHeading && (
+            <li aria-hidden className="col-span-4 mt-1 font-display text-sm font-black text-primary">
+              {stage.description}
             </li>
           )}
           <li className="animate-pop-in" style={{ animationDelay: `${index * 35}ms` }}>
@@ -56,14 +62,14 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
                   unlocked ? "bg-primary" : "bg-[#9aa39a]"
                 )}
               >
-                {stage.kind === "soroban" ? EVENT_SHORT[stage.event] : stage.number}
+                {stage.kind === "soroban" ? EVENT_SHORT[stage.event] : displayNumber(stage)}
               </span>
               {stage.isBoss && (
                 <Crown className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 text-accent" fill="currentColor" />
               )}
               {earned > 0 && (
                 <span className="absolute top-1 right-1">
-                  <StarsRow stars={earned} size="sm" animate={growing} />
+                  <StarsRow stars={earned} size="sm" animate={growing} max={maxStars(stage)} />
                 </span>
               )}
               {!unlocked ? (
@@ -71,10 +77,10 @@ export function StageGrid({ stages, stars, focusedId, grew, onSelect }: StageGri
                   ?
                 </span>
               ) : growing && grew ? (
-                <GrowImage color={stage.color} from={grew.from} to={earned} />
+                <GrowImage stage={stage} from={grew.from} to={earned} />
               ) : (
                 <Image
-                  src={growthImage(stage.color, growthForStars(earned))}
+                  src={growthImage(stage.color, growthForStage(stage, earned))}
                   alt=""
                   width={56}
                   height={70}

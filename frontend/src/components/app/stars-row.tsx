@@ -7,14 +7,17 @@ export function StarsRow({
   stars,
   size = "md",
   animate = false,
+  max = 3,
 }: {
   stars: Stars;
+  /** 並べる★の数。しそくえんざんは5 */
+  max?: number;
   size?: keyof typeof SIZE;
   animate?: boolean;
 }) {
   return (
     <span className={cn("inline-flex leading-none", SIZE[size])} role="img" aria-label={`ほし ${stars}こ`}>
-      {[1, 2, 3].map((n) => (
+      {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
         <span
           key={n}
           aria-hidden

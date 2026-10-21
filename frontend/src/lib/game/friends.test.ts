@@ -4,7 +4,7 @@ import { getStage, stagesOfMode, type ModeId } from "@/data/stages/catalog";
 import { continueLabel, favoriteText, modeBloom, nextGrowthText, stageLabel, unlockHint } from "@/lib/game/friends";
 import type { StarMap } from "@/lib/game/progression";
 
-function cleared(mode: ModeId, n: number, value: 1 | 2 | 3 = 3): StarMap {
+function cleared(mode: ModeId, n: number, value: 1 | 2 | 3 | 4 | 5 = 3): StarMap {
   return Object.fromEntries(stagesOfMode(mode).slice(0, n).map((s) => [s.id, value]));
 }
 
@@ -48,4 +48,19 @@ it("そろばんは番号ではなく級と種目で呼ぶ（画面に番号を�
 it("ほかのあそびの呼び方は今のまま", () => {
   expect(stageLabel(getStage("add-3")!)).toBe("たしざん 3");
   expect(continueLabel(getStage("add-3")!)).toBe("たしざん ステージ3 ・ くりあがり");
+});
+
+it("しそくえんざんは 1-1 の形で呼び、育ちの文も★5まで", () => {
+  const stage = getStage("shisoku-2")!;
+  expect(stageLabel(stage)).toBe("たねまき 1-2");
+  expect(continueLabel(stage)).toBe("たねまき ステージ1-2 ・ こたえが10まで");
+  expect(unlockHint(stage)).toBe("たねまき 1-2を クリアすると なかまに なるよ");
+  expect(nextGrowthText(1, stage)).toBe("★3で つぼみに なるよ");
+  expect(nextGrowthText(3, stage)).toBe("★4で はなが さくよ");
+  expect(nextGrowthText(5, stage)).toBe("まんかい！");
+});
+
+it("しそくえんざんの はなは ★4から。★3はつぼみ", () => {
+  expect(modeBloom("shisoku", cleared("shisoku", 4, 3)).bloomed).toBe(0);
+  expect(modeBloom("shisoku", cleared("shisoku", 20, 4))).toEqual({ bloomed: 20, total: 20, complete: true, left: 0 });
 });

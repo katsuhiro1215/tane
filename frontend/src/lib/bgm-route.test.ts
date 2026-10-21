@@ -24,4 +24,5 @@ it("チャレンジのプレイ画面はクイズ用、入口はホーム用", (
 
 it("そろばんのプレイ画面もクイズ用", () => {
   expect(bgmTrackFor("/soroban/soroban-15")).toBe("quiz");
+  expect(bgmTrackFor("/seed/shisoku-1")).toBe("quiz");
 });

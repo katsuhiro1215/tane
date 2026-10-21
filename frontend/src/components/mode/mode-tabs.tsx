@@ -6,6 +6,9 @@ import { useEffect, useRef } from "react";
 import { MODE_IDS, MODES, type ModeId } from "@/data/stages/catalog";
 import { cn } from "@/lib/utils";
 
+// メインの「たねまき」を先頭に出す（MODE_IDS の順は、色や「つづきから」の順に使うので変えない）
+const TAB_ORDER: readonly ModeId[] = ["shisoku", ...MODE_IDS.filter((id) => id !== "shisoku")];
+
 export function ModeTabs({ current }: { current: ModeId }) {
   const currentRef = useRef<HTMLAnchorElement>(null);
 
@@ -19,7 +22,7 @@ export function ModeTabs({ current }: { current: ModeId }) {
       aria-label="あそび"
       className="flex gap-1 overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
-      {MODE_IDS.map((id) => (
+      {TAB_ORDER.map((id) => (
         <Link
           key={id}
           ref={id === current ? currentRef : undefined}

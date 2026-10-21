@@ -1,4 +1,4 @@
-import { getStage, isModeId, type ModeId } from "@/data/stages/catalog";
+import { getStage, isModeId, maxStars, type ModeId } from "@/data/stages/catalog";
 import { isChallengeModeId, type ChallengeModeId } from "@/lib/game/challenge-rules";
 import { GARDEN_LIMIT, type StarMap } from "@/lib/game/progression";
 import type { EarnedStars, Stars } from "@/lib/game/stars";
@@ -7,23 +7,34 @@ import { createLocalStore } from "@/lib/local-store";
 export const PROGRESS_KEY = "tane:progress:v1";
 export const LEGACY_KEYS = ["tane:cleared-stages"] as const;
 
+export interface EndlessBest {
+  readonly correct: number;
+  readonly combo: number;
+}
+
 export interface Progress {
   readonly stars: StarMap;
   readonly best: Readonly<Record<string, number>>;
   readonly challengeBest: Readonly<Partial<Record<ChallengeModeId, number>>>;
+  /** エンドレスの記録（しそくえんざん）。正解数と最長コンボを、それぞれ最高だけ残す */
+  readonly endless: Readonly<Record<string, EndlessBest>>;
   readonly garden: readonly string[];
   readonly lastModeId?: ModeId;
   readonly titleSeen: boolean;
 }
 
-export const EMPTY_PROGRESS: Progress = { stars: {}, best: {}, challengeBest: {}, garden: [], titleSeen: false };
+export const EMPTY_PROGRESS: Progress = { stars: {}, best: {}, challengeBest: {}, endless: {}, garden: [], titleSeen: false };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isEarnedStars(value: unknown): value is EarnedStars {
-  return value === 1 || value === 2 || value === 3;
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5;
+}
+
+function isCount(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
 }
 
 function isScore(value: unknown): value is number {
@@ -43,7 +54,8 @@ export function parseProgress(raw: string | null): Progress {
   const stars: Record<string, EarnedStars> = {};
   if (isRecord(data.stars)) {
     for (const [id, value] of Object.entries(data.stars)) {
-      if (getStage(id) && isEarnedStars(value)) stars[id] = value;
+      const stage = getStage(id);
+      if (stage && isEarnedStars(value) && value <= maxStars(stage)) stars[id] = value;
     }
   }
   const best: Record<string, number> = {};
@@ -58,6 +70,14 @@ export function parseProgress(raw: string | null): Progress {
       if (isChallengeModeId(id) && isScore(value)) challengeBest[id] = value;
     }
   }
+  const endless: Record<string, EndlessBest> = {};
+  if (isRecord(data.endless)) {
+    for (const [id, value] of Object.entries(data.endless)) {
+      if (getStage(id) && isRecord(value) && isCount(value.correct) && isCount(value.combo)) {
+        endless[id] = { correct: value.correct, combo: value.combo };
+      }
+    }
+  }
   const garden: string[] = [];
   if (Array.isArray(data.garden)) {
     for (const id of data.garden) {
@@ -69,6 +89,7 @@ export function parseProgress(raw: string | null): Progress {
     stars,
     best,
     challengeBest,
+    endless,
     garden,
     titleSeen: data.titleSeen === true,
     ...(lastModeId ? { lastModeId } : {}),
@@ -159,6 +180,26 @@ export function recordChallengeResult(
   const { progress, newBest } = withChallengeScore(current, mode, score);
   if (newBest) save(progress);
   return { newBest, bestBefore };
+}
+
+export function recordEndlessResult(
+  stageId: string,
+  correct: number,
+  combo: number
+): { newBestCorrect: boolean; newBestCombo: boolean } {
+  const current = store.read();
+  const before = current.endless[stageId];
+  const newBestCorrect = correct > 0 && (before === undefined || correct > before.correct);
+  const newBestCombo = combo > 0 && (before === undefined || combo > before.combo);
+  if (newBestCorrect || newBestCombo) {
+    const next: EndlessBest = {
+      correct: Math.max(before?.correct ?? 0, correct),
+      combo: Math.max(before?.combo ?? 0, combo),
+    };
+    // 片方が0のままだと次の読み込みで捨てられるので、最低1にしておく
+    save({ ...current, endless: { ...current.endless, [stageId]: { correct: Math.max(1, next.correct), combo: Math.max(1, next.combo) } } });
+  }
+  return { newBestCorrect, newBestCombo };
 }
 
 export function toggleGarden(stageId: string): GardenToggle {
