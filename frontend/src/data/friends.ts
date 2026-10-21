@@ -155,6 +155,22 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "shisoku-66": { name: "ヒャクゴエ", line: "100を こえても へいき" },
   "shisoku-67": { name: "サンケタヒク", line: "3けたの ひきざんも おまかせ" },
   "shisoku-68": { name: "オオキイヒク", line: "おおきい かずでも ひけるよ" },
+  "shisoku-69": { name: "ミツケタ", line: "3けたの？も みつかるよ" },
+  "shisoku-70": { name: "ヒャクノムコウ", line: "100の むこうも へいき" },
+  "shisoku-71": { name: "サガシダス", line: "3けたの ひきざん？も さがせる" },
+  "shisoku-72": { name: "オオキイサガシ", line: "おおきくても さがせるよ" },
+  "shisoku-73": { name: "ヨンソク", line: "よっつの けいさん まざるよ" },
+  "shisoku-74": { name: "マザリアイ", line: "たしひきかけわり ぜんぶ！" },
+  "shisoku-75": { name: "ドレデモ", line: "どれが きても へいき" },
+  "shisoku-76": { name: "ヨンソクタツジン", line: "よんそくの たつじんだよ" },
+  "shisoku-77": { name: "ニケタカケ", line: "2けた×2けた、いくよ！" },
+  "shisoku-78": { name: "ヒッサンニケタ", line: "ひっさんでも へいき" },
+  "shisoku-79": { name: "ニケタムシ", line: "2けたの？も みつけるよ" },
+  "shisoku-80": { name: "ダイニケタ", line: "2けたの かけざん たつじん" },
+  "shisoku-81": { name: "オオキナアマリ", line: "わる かずが おおきくても" },
+  "shisoku-82": { name: "ジュウイチ", line: "11から わるよ" },
+  "shisoku-83": { name: "ムズカシアマリ", line: "むずかしい あまりも へいき" },
+  "shisoku-84": { name: "アマリタツジン", line: "あまりの めいじんに なったよ" },
 };
 
 // 色の呼び名は設計書の付録B

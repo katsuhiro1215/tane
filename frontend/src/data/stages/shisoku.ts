@@ -49,6 +49,10 @@ export const SHISOKU_GROUP_NAMES = [
   "かけざん ひっさん",
   "わりざん あまりあり（かんたん）",
   "たしざん・ひきざん3けた",
+  "たしひき3けたの むしくい",
+  "よんそく ごちゃまぜ（2けた）",
+  "かけざん 2けた×2けた",
+  "わりざん あまりあり（むずかしい）",
 ] as const;
 
 // グループ1は「たし算（きほん）」、グループ2は「ひき算（きほん）」。それぞれ今のたしざん・ひきざんの1〜4と同じ中身で、ゆっくり上げていく（Owner 決定）
@@ -319,6 +323,149 @@ const G14_G17: StageSpec<SeedStageRule>[] = [
   })),
 ];
 
+// グループ18「たしひき3けたの むしくい」
+const BLANK3_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 7000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+  { fallMs: 7000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+  { fallMs: 6500, simultaneous: 2, thresholds: [4, 7, 10, 13, 16], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+  { fallMs: 6500, simultaneous: 2, thresholds: [4, 7, 10, 13, 16], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+];
+
+// グループ19「よんそく ごちゃまぜ（2けた）」。たし・ひき・かけ・わりを、同じ段ごとにまぜる
+const YONSOKU2_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 7500, simultaneous: 3, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 7000, simultaneous: 3, thresholds: [4, 8, 12, 16, 20] },
+  { fallMs: 7000, simultaneous: 3, thresholds: [4, 7, 10, 13, 16] },
+  { fallMs: 6500, simultaneous: 3, thresholds: [3, 6, 9, 12, 15] },
+];
+
+// グループ20「かけざん 2けた×2けた」。4ステージで出し方を変える（同じステージでは混ぜない）
+const MUL22_SEED = {
+  flat: { fallMs: 7500, simultaneous: 2, thresholds: [5, 8, 11, 14, 17] } satisfies Omit<SeedStageRule, "rule">,
+  column: {
+    fallMs: 9500,
+    simultaneous: 2,
+    thresholds: [4, 7, 10, 13, 16],
+    layout: "column",
+  } satisfies Omit<SeedStageRule, "rule">,
+  blank: {
+    fallMs: 7000,
+    simultaneous: 2,
+    thresholds: [5, 9, 13, 17, 21],
+    blank: true,
+    single: true,
+    roundMs: BLANK_ROUND_MS,
+  } satisfies Omit<SeedStageRule, "rule">,
+  mix: { fallMs: 7000, simultaneous: 2, thresholds: [4, 7, 10, 13, 16] } satisfies Omit<SeedStageRule, "rule">,
+};
+
+// グループ21「わりざん あまりあり（むずかしい）」。わる数が2けた
+const DIV_MOD_HARD_PAIRS: DivModRule[] = [
+  { divisor: range(11, 14), quotient: range(2, 9) },
+  { divisor: range(11, 16), quotient: range(2, 9) },
+  { divisor: range(14, 19), quotient: range(2, 9) },
+  { divisor: range(11, 19), quotient: range(2, 9) },
+];
+const DIV_MOD_HARD_THRESHOLDS: SeedThresholds[] = [
+  [3, 6, 9, 12, 15],
+  [3, 6, 9, 12, 15],
+  [2, 5, 8, 11, 14],
+  [2, 5, 8, 11, 14],
+];
+const DIV_MOD_HARD_FALL_MS = [9000, 9000, 8500, 8500];
+
+const G18_G21: StageSpec<SeedStageRule>[] = [
+  ...[9, 10].map((i, j) => ({
+    name: `むしくい ${ADD_STAGE_SPECS[i].name}`,
+    description: SHISOKU_GROUP_NAMES[17],
+    rule: { rule: ADD_STAGE_SPECS[i].rule, ...BLANK3_SEED[j] },
+  })),
+  ...[9, 10].map((i, j) => ({
+    name: `むしくい ${SUB_STAGE_SPECS[i].name}`,
+    description: SHISOKU_GROUP_NAMES[17],
+    rule: { rule: SUB_STAGE_SPECS[i].rule, ...BLANK3_SEED[j + 2] },
+  })),
+  {
+    name: "よんそく 2けた①",
+    description: SHISOKU_GROUP_NAMES[18],
+    rule: {
+      rule: {
+        op: "mix" as const,
+        rules: [ADD_STAGE_SPECS[7].rule, SUB_STAGE_SPECS[7].rule, MUL_STAGE_SPECS[7].rule, DIV_STAGE_SPECS[6].rule],
+      },
+      ...YONSOKU2_SEED[0],
+    },
+  },
+  {
+    name: "よんそく 2けた②",
+    description: SHISOKU_GROUP_NAMES[18],
+    rule: {
+      rule: {
+        op: "mix" as const,
+        rules: [ADD_STAGE_SPECS[8].rule, SUB_STAGE_SPECS[8].rule, MUL_STAGE_SPECS[8].rule, DIV_STAGE_SPECS[7].rule],
+      },
+      ...YONSOKU2_SEED[1],
+    },
+  },
+  {
+    name: "よんそく 2けた③",
+    description: SHISOKU_GROUP_NAMES[18],
+    rule: {
+      rule: {
+        op: "mix" as const,
+        rules: [ADD_STAGE_SPECS[8].rule, SUB_STAGE_SPECS[8].rule, MUL_STAGE_SPECS[9].rule, DIV_STAGE_SPECS[7].rule],
+      },
+      ...YONSOKU2_SEED[2],
+    },
+  },
+  {
+    name: "よんそく 2けた④",
+    description: SHISOKU_GROUP_NAMES[18],
+    rule: {
+      rule: {
+        op: "mix" as const,
+        rules: [ADD_STAGE_SPECS[9].rule, SUB_STAGE_SPECS[9].rule, MUL_STAGE_SPECS[9].rule, DIV_STAGE_SPECS[8].rule],
+      },
+      ...YONSOKU2_SEED[3],
+    },
+  },
+  {
+    name: MUL_STAGE_SPECS[10].name,
+    description: SHISOKU_GROUP_NAMES[19],
+    rule: { rule: MUL_STAGE_SPECS[10].rule, ...MUL22_SEED.flat },
+  },
+  {
+    name: `ひっさん ${MUL_STAGE_SPECS[10].name}`,
+    description: SHISOKU_GROUP_NAMES[19],
+    rule: { rule: MUL_STAGE_SPECS[10].rule, ...MUL22_SEED.column },
+  },
+  {
+    name: `むしくい ${MUL_STAGE_SPECS[10].name}`,
+    description: SHISOKU_GROUP_NAMES[19],
+    rule: { rule: MUL_STAGE_SPECS[10].rule, ...MUL22_SEED.blank },
+  },
+  {
+    name: "まぜこぜ 2けた×2けた",
+    description: SHISOKU_GROUP_NAMES[19],
+    rule: {
+      rule: { op: "mix" as const, rules: [MUL_STAGE_SPECS[10].rule, MUL_STAGE_SPECS[9].rule] },
+      ...MUL22_SEED.mix,
+    },
+  },
+  ...DIV_MOD_HARD_PAIRS.map((pair, i) => ({
+    name: "あまりのある わりざん（むずかしい）",
+    description: SHISOKU_GROUP_NAMES[20],
+    rule: {
+      rule: { op: "div" as const, divisor: pair.divisor, quotient: pair.quotient },
+      fallMs: DIV_MOD_HARD_FALL_MS[i],
+      simultaneous: DIV_MOD_SIMULTANEOUS,
+      thresholds: DIV_MOD_HARD_THRESHOLDS[i],
+      roundMs: BLANK_ROUND_MS,
+      pair,
+    },
+  })),
+];
+
 export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
   {
     name: "こたえが5まで",
@@ -363,5 +510,6 @@ export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
   ...G6_G9,
   ...G10_G13,
   ...G14_G17,
+  ...G18_G21,
 ];
 
