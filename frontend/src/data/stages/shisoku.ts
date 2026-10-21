@@ -45,6 +45,10 @@ export const SHISOKU_GROUP_NAMES = [
   "かけざん くく ぜんぶ",
   "わりざん くく",
   "わりざん くく ぜんぶ",
+  "かけざん・わりざん ごちゃまぜ",
+  "かけざん ひっさん",
+  "わりざん あまりあり（かんたん）",
+  "たしざん・ひきざん3けた",
 ] as const;
 
 // グループ1は「たし算（きほん）」、グループ2は「ひき算（きほん）」。それぞれ今のたしざん・ひきざんの1〜4と同じ中身で、ゆっくり上げていく（Owner 決定）
@@ -213,6 +217,108 @@ const G10_G13: StageSpec<SeedStageRule>[] = [
   },
 ];
 
+// グループ14「かけざん・わりざん ごちゃまぜ」
+const MULDIV_MIX_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 8000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
+  { fallMs: 7500, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 7000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 7000, simultaneous: 3, thresholds: [4, 7, 10, 13, 16] },
+];
+
+// グループ15「かけざん ひっさん」
+const MUL_COLUMN_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 9500, simultaneous: 2, thresholds: [5, 8, 11, 14, 17], layout: "column" },
+  { fallMs: 9500, simultaneous: 2, thresholds: [5, 8, 11, 14, 17], layout: "column" },
+  { fallMs: 9000, simultaneous: 2, thresholds: [4, 7, 10, 13, 16], layout: "column" },
+  { fallMs: 9000, simultaneous: 2, thresholds: [4, 7, 10, 13, 16], layout: "column" },
+];
+
+// グループ16「わりざん あまりあり（かんたん）」。商とあまりを別々に答える（降らない）
+const DIV_MOD_SIMULTANEOUS: 2 | 3 = 2;
+const DIV_MOD_EASY_PAIRS: DivModRule[] = [
+  { divisor: range(2, 4), quotient: range(2, 6) },
+  { divisor: range(2, 6), quotient: range(2, 7) },
+  { divisor: range(3, 7), quotient: range(2, 8) },
+  { divisor: range(2, 9), quotient: range(2, 9) },
+];
+const DIV_MOD_EASY_THRESHOLDS: SeedThresholds[] = [
+  [4, 7, 10, 13, 16],
+  [4, 7, 10, 13, 16],
+  [3, 6, 9, 12, 15],
+  [3, 6, 9, 12, 15],
+];
+const DIV_MOD_EASY_FALL_MS = [8000, 8000, 7500, 7500];
+
+// グループ17「たしざん・ひきざん3けた」
+const BIG3_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 8000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 8000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 7500, simultaneous: 2, thresholds: [4, 7, 10, 13, 16] },
+  { fallMs: 7500, simultaneous: 2, thresholds: [4, 7, 10, 13, 16] },
+];
+
+const G14_G17: StageSpec<SeedStageRule>[] = [
+  {
+    name: "まぜこぜ 2・5だん",
+    description: SHISOKU_GROUP_NAMES[13],
+    rule: {
+      rule: { op: "mix" as const, rules: [MUL_STAGE_SPECS[0].rule, DIV_STAGE_SPECS[0].rule] },
+      ...MULDIV_MIX_SEED[0],
+    },
+  },
+  {
+    name: "まぜこぜ 6・7だん",
+    description: SHISOKU_GROUP_NAMES[13],
+    rule: {
+      rule: { op: "mix" as const, rules: [MUL_STAGE_SPECS[2].rule, DIV_STAGE_SPECS[2].rule] },
+      ...MULDIV_MIX_SEED[1],
+    },
+  },
+  {
+    name: "まぜこぜ くくぜんぶ",
+    description: SHISOKU_GROUP_NAMES[13],
+    rule: {
+      rule: { op: "mix" as const, rules: [MUL_STAGE_SPECS[5].rule, DIV_STAGE_SPECS[4].rule] },
+      ...MULDIV_MIX_SEED[2],
+    },
+  },
+  {
+    name: "まぜこぜ なんじゅう",
+    description: SHISOKU_GROUP_NAMES[13],
+    rule: {
+      rule: { op: "mix" as const, rules: [MUL_STAGE_SPECS[6].rule, DIV_STAGE_SPECS[5].rule] },
+      ...MULDIV_MIX_SEED[3],
+    },
+  },
+  ...[6, 7, 8, 9].map((i, j) => ({
+    name: `ひっさん ${MUL_STAGE_SPECS[i].name}`,
+    description: SHISOKU_GROUP_NAMES[14],
+    rule: { rule: MUL_STAGE_SPECS[i].rule, ...MUL_COLUMN_SEED[j] },
+  })),
+  ...DIV_MOD_EASY_PAIRS.map((pair, i) => ({
+    name: "あまりのある わりざん",
+    description: SHISOKU_GROUP_NAMES[15],
+    rule: {
+      rule: { op: "div" as const, divisor: pair.divisor, quotient: pair.quotient },
+      fallMs: DIV_MOD_EASY_FALL_MS[i],
+      simultaneous: DIV_MOD_SIMULTANEOUS,
+      thresholds: DIV_MOD_EASY_THRESHOLDS[i],
+      roundMs: BLANK_ROUND_MS,
+      pair,
+    },
+  })),
+  ...[9, 10].map((i, j) => ({
+    name: ADD_STAGE_SPECS[i].name,
+    description: SHISOKU_GROUP_NAMES[16],
+    rule: { rule: ADD_STAGE_SPECS[i].rule, ...BIG3_SEED[j] },
+  })),
+  ...[9, 10].map((i, j) => ({
+    name: SUB_STAGE_SPECS[i].name,
+    description: SHISOKU_GROUP_NAMES[16],
+    rule: { rule: SUB_STAGE_SPECS[i].rule, ...BIG3_SEED[j + 2] },
+  })),
+];
+
 export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
   {
     name: "こたえが5まで",
@@ -256,5 +362,6 @@ export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
   })),
   ...G6_G9,
   ...G10_G13,
+  ...G14_G17,
 ];
 

@@ -139,6 +139,22 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "shisoku-50": { name: "マゼワリ", line: "いろんな だんで わるよ" },
   "shisoku-51": { name: "ゴッチャ", line: "かずが まざっても わりざん" },
   "shisoku-52": { name: "ドコカナ", line: "わりざんの？も さがせるよ" },
+  "shisoku-53": { name: "カケワリ", line: "かけても わっても へいき！" },
+  "shisoku-54": { name: "リョウホウ", line: "かけざんも わりざんも とくい" },
+  "shisoku-55": { name: "ゼンブデキ", line: "くくなら ぜんぶ できるよ" },
+  "shisoku-56": { name: "ナンジュウワ", line: "なんじゅうの けいさんも らくらく" },
+  "shisoku-57": { name: "ヒッサンカケ", line: "かけざんも ひっさんで" },
+  "shisoku-58": { name: "クリアゲ", line: "くりあがりに きをつけて" },
+  "shisoku-59": { name: "サンケタ", line: "3けたの かけざんも へいき" },
+  "shisoku-60": { name: "ニケタニ", line: "2けた×2けたも ひっさんで" },
+  "shisoku-61": { name: "アマリン", line: "わって あまりも こたえよう" },
+  "shisoku-62": { name: "ノコリン", line: "のこりが あまりだよ" },
+  "shisoku-63": { name: "ワケワケ", line: "わけても あまりが でるね" },
+  "shisoku-64": { name: "アマリマスタ", line: "あまりの たつじんに なったよ" },
+  "shisoku-65": { name: "サンケタス", line: "3けたの たしざんも いけるよ" },
+  "shisoku-66": { name: "ヒャクゴエ", line: "100を こえても へいき" },
+  "shisoku-67": { name: "サンケタヒク", line: "3けたの ひきざんも おまかせ" },
+  "shisoku-68": { name: "オオキイヒク", line: "おおきい かずでも ひけるよ" },
 };
 
 // 色の呼び名は設計書の付録B
