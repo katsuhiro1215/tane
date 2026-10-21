@@ -43,8 +43,14 @@ export function ModeScreen({ modeId, requestedStageId }: { modeId: ModeId } & Pi
   const stage = stages[index];
   const unlocked = isUnlocked(stage, stars);
 
-  function start() {
+  // ステージを選ぶ（前へ・次へ・一覧から）
+  function choose(id: string) {
     play("select");
+    setFocusedId(id);
+  }
+
+  function start() {
+    play("decide");
     router.push(playPath(stage));
   }
 
@@ -57,11 +63,11 @@ export function ModeScreen({ modeId, requestedStageId }: { modeId: ModeId } & Pi
         total={stages.length}
         stars={starsOf(stars, stage.id)}
         unlocked={unlocked}
-        onPrev={index > 0 ? () => setFocusedId(stages[index - 1].id) : undefined}
-        onNext={index < stages.length - 1 ? () => setFocusedId(stages[index + 1].id) : undefined}
+        onPrev={index > 0 ? () => choose(stages[index - 1].id) : undefined}
+        onNext={index < stages.length - 1 ? () => choose(stages[index + 1].id) : undefined}
         onStart={start}
       />
-      <StageGrid stages={stages} stars={stars} focusedId={focusedId} grew={grew} onSelect={setFocusedId} />
+      <StageGrid stages={stages} stars={stars} focusedId={focusedId} grew={grew} onSelect={choose} />
     </main>
   );
 }

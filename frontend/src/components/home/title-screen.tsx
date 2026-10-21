@@ -45,7 +45,7 @@ export function TitleScreen() {
         size="xl"
         className="relative mt-auto mb-24 w-4/5 animate-pulse-soft"
         onClick={() => {
-          play("select");
+          play("decide");
           markTitleSeen();
         }}
       >

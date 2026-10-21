@@ -18,7 +18,7 @@ export function ContinueButton({ stars, lastModeId }: { stars: StarMap; lastMode
       variant="cta"
       className="h-[72px] w-full flex-col gap-0 leading-tight"
       onClick={() => {
-        play("select");
+        play("decide");
         router.push(playPath(stage));
       }}
     >

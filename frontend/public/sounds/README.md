@@ -8,7 +8,8 @@
 | incorrect.mp3 | 不正解（クイズ不正解1） |
 | allCorrect.mp3 | ステージクリア |
 | coin.mp3 | タネが育った |
-| decide41.mp3 | ボタン（`select`） |
+| decide.mp3 | 「はじめる」「つづきから」など決めるとき（`decide`。決定ボタンを押す4を1.5秒に切った） |
+| decide41.mp3 | 何かを選んだとき（`select`。ステージ選び、なかまをさわる、にわに出す） |
 | key.mp3 | 数字キーを打つ（決定ボタンを押す51） |
 | cancel.mp3 | ⌫で消す（キャンセル5） |
 | levelup.mp3 | チャレンジの段が上がる |

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AppButton, appButtonVariants } from "@/components/app/button";
+import { useSound } from "@/components/app/sound-provider";
 import { Panel } from "@/components/app/panel";
 import { StarsRow } from "@/components/app/stars-row";
 import type { SeedStage } from "@/data/stages/catalog";
@@ -21,6 +22,11 @@ export function SeedModeSelect({
   endlessBest: { correct: number; combo: number } | undefined;
   onSelect: (mode: SeedRunMode) => void;
 }) {
+  const { play } = useSound();
+  const choose = (mode: SeedRunMode) => {
+    play("decide");
+    onSelect(mode);
+  };
   return (
     <main className="flex flex-1 flex-col justify-center gap-4 p-6">
       <Panel className="flex flex-col items-center gap-2 py-6">
@@ -29,11 +35,11 @@ export function SeedModeSelect({
         <StarsRow stars={stars} max={5} />
       </Panel>
       <div className="flex flex-col gap-3">
-        <AppButton variant="cta" size="xl" onClick={() => onSelect("minute")}>
+        <AppButton variant="cta" size="xl" onClick={() => choose("minute")}>
           {roundLabel(stage.rule.roundMs ?? SEED_ROUND_MS)} ちょうせん
         </AppButton>
         <p className="-mt-1 text-center text-xs font-bold text-muted-foreground">せいかいの かずで ★が きまるよ</p>
-        <AppButton variant="primary" size="lg" onClick={() => onSelect("endless")}>
+        <AppButton variant="primary" size="lg" onClick={() => choose("endless")}>
           エンドレス（れんしゅう）
         </AppButton>
         <p className="-mt-1 text-center text-xs font-bold text-muted-foreground">

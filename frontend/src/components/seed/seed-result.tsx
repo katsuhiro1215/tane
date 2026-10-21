@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { useSound } from "@/components/app/sound-provider";
 import { AppButton, appButtonVariants } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { StarsRow } from "@/components/app/stars-row";
@@ -33,6 +34,7 @@ export interface SeedOutcome {
 const SCORE_COUNT_MS = 1200;
 
 export function SeedResult({ stage, outcome, onRetry }: { stage: SeedStage; outcome: SeedOutcome; onRetry: () => void }) {
+  const { play } = useSound();
   const score = useCountUp(outcome.score, SCORE_COUNT_MS, 0);
   const minute = outcome.mode === "minute";
   const passed = outcome.stars >= unlockStars(stage);
@@ -98,7 +100,10 @@ export function SeedResult({ stage, outcome, onRetry }: { stage: SeedStage; outc
             つぎのステージへ
           </Link>
         )}
-        <AppButton variant={links.nextHref ? "primary" : "cta"} size={links.nextHref ? "lg" : "xl"} onClick={onRetry}>
+        <AppButton variant={links.nextHref ? "primary" : "cta"} size={links.nextHref ? "lg" : "xl"} onClick={() => {
+            play("decide");
+            onRetry();
+          }}>
           もういちど
         </AppButton>
         <Link href={links.backHref} className={appButtonVariants({ variant: "cream", size: "lg" })}>
