@@ -20,7 +20,7 @@ interface Options {
 }
 
 export function useSpeedPlay({ secondsPerProblem, answerable, questionKey }: Options) {
-  const { playBgm } = useSound();
+  const { play, playBgm } = useSound();
   // プレイ画面は ssr: false で読み込むので、初期値で performance を使ってよい
   const [clock] = useState(() => createAnswerClock(() => performance.now()));
   const [session, setSession] = useState<PlaySession>(INITIAL_SESSION);
@@ -53,6 +53,7 @@ export function useSpeedPlay({ secondsPerProblem, answerable, questionKey }: Opt
       outcome.gained > 0 ? { amount: outcome.gained, doubled: outcome.inFever, key: outcome.session.answered } : null
     );
     if (outcome.feverStarted) {
+      play("gauge");
       playBgm("fever");
       setBanner(true);
       if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
