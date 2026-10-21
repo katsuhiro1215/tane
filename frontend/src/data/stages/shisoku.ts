@@ -35,6 +35,10 @@ export const SHISOKU_GROUP_NAMES = [
   "たしざん・ひきざん ごちゃまぜ",
   "たしざんの むしくい",
   "ひきざんの むしくい",
+  "たしざん2けた（ひっさん）",
+  "ひきざん2けた（ひっさん）",
+  "たしひき2けた ごちゃまぜ",
+  "たしひき2けたの むしくい",
 ] as const;
 
 // グループ1は「たし算（きほん）」、グループ2は「ひき算（きほん）」。それぞれ今のたしざん・ひきざんの1〜4と同じ中身で、ゆっくり上げていく（Owner 決定）
@@ -60,6 +64,57 @@ const BLANK_SEED: Omit<SeedStageRule, "rule">[] = [
   { fallMs: 7000, simultaneous: 2, thresholds: [8, 13, 18, 23, 28], blank: true, single: true, roundMs: BLANK_ROUND_MS },
   { fallMs: 8000, simultaneous: 2, thresholds: [7, 12, 17, 22, 27], blank: true, single: true, roundMs: BLANK_ROUND_MS },
   { fallMs: 8000, simultaneous: 2, thresholds: [7, 12, 17, 22, 27], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+];
+
+// グループ6・7は「2けたの筆算（ひっさん）」。たしざん・ひきざんの5・6・8・9番（0始まり添字4,5,7,8）を縦書きで
+const COLUMN2_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 10000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21], layout: "column" },
+  { fallMs: 10000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21], layout: "column" },
+  { fallMs: 9500, simultaneous: 2, thresholds: [4, 7, 10, 13, 16], layout: "column" },
+  { fallMs: 9500, simultaneous: 2, thresholds: [4, 7, 10, 13, 16], layout: "column" },
+];
+
+// グループ8「たしひき2けた ごちゃまぜ」。同じ番号どうしで混ぜる（ふつうの式）
+const MIX2_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 9000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
+  { fallMs: 9000, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
+  { fallMs: 8500, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 8500, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+];
+
+// グループ9「たしひき2けたの むしくい」
+const BLANK2_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 7500, simultaneous: 2, thresholds: [6, 10, 14, 18, 22], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+  { fallMs: 7500, simultaneous: 2, thresholds: [6, 10, 14, 18, 22], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+  { fallMs: 7000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+  { fallMs: 7000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+];
+
+// 2けた±1けた・2けた±2けたの4段（0始まり添字4,5,7,8）
+const ADD2 = [4, 5, 7, 8].map((i) => ADD_STAGE_SPECS[i]);
+const SUB2 = [4, 5, 7, 8].map((i) => SUB_STAGE_SPECS[i]);
+
+const G6_G9: StageSpec<SeedStageRule>[] = [
+  ...ADD2.map((spec, i) => ({
+    name: `ひっさん ${spec.name}`,
+    description: SHISOKU_GROUP_NAMES[5],
+    rule: { rule: spec.rule, ...COLUMN2_SEED[i] },
+  })),
+  ...SUB2.map((spec, i) => ({
+    name: `ひっさん ${spec.name}`,
+    description: SHISOKU_GROUP_NAMES[6],
+    rule: { rule: spec.rule, ...COLUMN2_SEED[i] },
+  })),
+  ...ADD2.map((spec, i) => ({
+    name: `まぜこぜ ${spec.name}`,
+    description: SHISOKU_GROUP_NAMES[7],
+    rule: { rule: { op: "mix" as const, rules: [spec.rule, SUB2[i].rule] }, ...MIX2_SEED[i] },
+  })),
+  ...[ADD2[2], ADD2[3], SUB2[2], SUB2[3]].map((spec, i) => ({
+    name: `むしくい ${spec.name}`,
+    description: SHISOKU_GROUP_NAMES[8],
+    rule: { rule: spec.rule, ...BLANK2_SEED[i] },
+  })),
 ];
 
 export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
@@ -103,4 +158,6 @@ export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
     description: SHISOKU_GROUP_NAMES[4],
     rule: { rule: spec.rule, ...BLANK_SEED[i] },
   })),
+  ...G6_G9,
 ];
+

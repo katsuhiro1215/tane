@@ -25,9 +25,9 @@ const N = 2000;
 const arithmetic = STAGES.filter((s): s is Extract<Stage, { kind: "arithmetic" }> => s.kind === "arithmetic");
 
 describe("ステージの数とid", () => {
-  it("全部で100、あそびごとに12・12・12・12・6・26・20", () => {
-    expect(STAGES).toHaveLength(100);
-    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 20]);
+  it("全部で116、あそびごとに12・12・12・12・6・26・36", () => {
+    expect(STAGES).toHaveLength(116);
+    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 36]);
   });
 
   it("idは `<あそび>-<番号>` で重複しない", () => {
@@ -188,8 +188,8 @@ describe("目安の秒数と目標タイム（設計書2.5）", () => {
 describe("しそくえんざん（種が降る）", () => {
   const list = stagesOfMode("shisoku");
 
-  it("20ステージで、idは shisoku-1〜20、遊ぶ場所は /seed/", () => {
-    expect(list.map((s) => s.id)).toEqual(Array.from({ length: 20 }, (_, i) => `shisoku-${i + 1}`));
+  it("36ステージで、idは shisoku-1〜36、遊ぶ場所は /seed/", () => {
+    expect(list.map((s) => s.id)).toEqual(Array.from({ length: 36 }, (_, i) => `shisoku-${i + 1}`));
     expect(playPath(list[0])).toBe("/seed/shisoku-1");
     expect(list.every((s) => s.kind === "seed" && !s.isBoss)).toBe(true);
   });
@@ -201,19 +201,33 @@ describe("しそくえんざん（種が降る）", () => {
     expect(unlockStars(getStage("add-1")!)).toBe(1);
   });
 
-  it("表示の番号は 1-1〜1-4、2-1〜2-4。ほかは番号のまま", () => {
-    expect(list.map((s) => displayNumber(s))).toEqual(["1-1", "1-2", "1-3", "1-4", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "3-4",
+  it("表示の番号は 1-1〜1-4、2-1〜2-4…9-1〜9-4。ほかは番号のまま", () => {
+    expect(list.slice(0, 20).map((s) => displayNumber(s))).toEqual(["1-1", "1-2", "1-3", "1-4", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "3-4",
       "4-1", "4-2", "4-3", "4-4", "5-1", "5-2", "5-3", "5-4"]);
+    expect(list.slice(20, 36).map((s) => displayNumber(s))).toEqual([
+      "6-1", "6-2", "6-3", "6-4", "7-1", "7-2", "7-3", "7-4", "8-1", "8-2", "8-3", "8-4", "9-1", "9-2", "9-3", "9-4",
+    ]);
     expect(list.slice(4, 8).map((s) => s.description)).toEqual(Array(4).fill("ひきざん（きほん）"));
     expect(list.slice(8, 12).map((s) => s.description)).toEqual(Array(4).fill("たしざん・ひきざん ごちゃまぜ"));
+    expect(list.slice(20, 24).map((s) => s.description)).toEqual(Array(4).fill("たしざん2けた（ひっさん）"));
+    expect(list.slice(24, 28).map((s) => s.description)).toEqual(Array(4).fill("ひきざん2けた（ひっさん）"));
+    expect(list.slice(28, 32).map((s) => s.description)).toEqual(Array(4).fill("たしひき2けた ごちゃまぜ"));
+    expect(list.slice(32, 36).map((s) => s.description)).toEqual(Array(4).fill("たしひき2けたの むしくい"));
     expect(displayNumber(getStage("add-3")!)).toBe("3");
   });
 
-  it("むしくいは、降らずに1問ずつ・2分。ふつうのグループは降る・1分", () => {
+  it("筆算（column）のステージには display 付きの問題が作れる", () => {
+    for (const stage of list.slice(20, 28)) {
+      if (stage.kind !== "seed") throw new Error("seed stage expected");
+      expect(stage.rule.layout).toBe("column");
+    }
+  });
+
+  it("むしくいは、降らずに1問ずつ・2分。あまりのあるわり算は別の画面なので対象外。ふつうのグループは降る・1分", () => {
     for (const stage of list) {
       if (stage.kind !== "seed") throw new Error("seed stage expected");
-      const blank = stage.number > 12;
-      expect(stage.rule.blank === true).toBe(blank);
+      if (stage.rule.pair) continue;
+      const blank = stage.rule.blank === true;
       expect(stage.rule.single === true).toBe(blank);
       expect(stage.rule.roundMs ?? 60_000).toBe(blank ? 120_000 : 60_000);
     }

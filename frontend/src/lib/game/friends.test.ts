@@ -62,5 +62,11 @@ it("しそくえんざんは 1-1 の形で呼び、育ちの文も★5まで", (
 
 it("しそくえんざんの はなは ★4から。★3はつぼみ", () => {
   expect(modeBloom("shisoku", cleared("shisoku", 4, 3)).bloomed).toBe(0);
-  expect(modeBloom("shisoku", cleared("shisoku", 20, 4))).toEqual({ bloomed: 20, total: 20, complete: true, left: 0 });
+  const allShisoku = stagesOfMode("shisoku").length;
+  expect(modeBloom("shisoku", cleared("shisoku", allShisoku, 4))).toEqual({
+    bloomed: allShisoku,
+    total: allShisoku,
+    complete: true,
+    left: 0,
+  });
 });

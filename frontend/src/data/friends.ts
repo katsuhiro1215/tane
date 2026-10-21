@@ -107,6 +107,22 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "shisoku-18": { name: "ヒソム", line: "こっそり かくれた かずだよ" },
   "shisoku-19": { name: "ノゾキ", line: "のぞいて みつけちゃおう！" },
   "shisoku-20": { name: "スケル", line: "ぜんぶ みえる めいたんてい！" },
+  "shisoku-21": { name: "ダンダン", line: "くらいを そろえて たすよ" },
+  "shisoku-22": { name: "ソロエル", line: "ひっさんは くらいが たいせつ" },
+  "shisoku-23": { name: "ツムツム", line: "おおきい かずも ひっさんで" },
+  "shisoku-24": { name: "ノボリ", line: "くりあがりも ひっさんなら かんたん" },
+  "shisoku-25": { name: "シキリ", line: "くらいを そろえて ひくよ" },
+  "shisoku-26": { name: "ヒキタテ", line: "ひっさんで ひきざんも らくらく" },
+  "shisoku-27": { name: "サゲゾエ", line: "くりさがりも ひっさんで ばっちり" },
+  "shisoku-28": { name: "トトノエ", line: "くらいごとに きちんとね" },
+  "shisoku-29": { name: "マザリ", line: "たしも ひきも きたぞ！" },
+  "shisoku-30": { name: "ドッチダ", line: "たすのか ひくのか よくみてね" },
+  "shisoku-31": { name: "キリカエ", line: "まざっても へいき！" },
+  "shisoku-32": { name: "ユダンタ", line: "おおきくても まざっても！" },
+  "shisoku-33": { name: "ドコダロ", line: "？に はいる かず さがそう" },
+  "shisoku-34": { name: "サガソウ", line: "2けたの むしくいも おまかせ" },
+  "shisoku-35": { name: "ヒソヒソ", line: "ひきざんの？も みつけちゃう" },
+  "shisoku-36": { name: "カンペキ", line: "むしくい たつじんに なったよ" },
 };
 
 // 色の呼び名は設計書の付録B
