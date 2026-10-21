@@ -121,6 +121,7 @@ export function ChallengePlayer({ modeId }: { modeId: ChallengeModeId }) {
       setProblem(nextProblem(modeId, step.state.level, problem));
       setAsked((n) => n + 1);
       setLevelUpAt(step.leveledUp ? step.state.correctCount : null);
+      if (step.leveledUp) play("levelUp");
       setFeedback(null);
     }, FEEDBACK_DELAY_MS);
   }

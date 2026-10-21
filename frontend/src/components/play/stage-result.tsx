@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+import { useSound } from "@/components/app/sound-provider";
 import { AppButton, appButtonVariants } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { StarsRow } from "@/components/app/stars-row";
@@ -48,6 +49,7 @@ export function StageResult(props: StageResultProps) {
 }
 
 function ResultBody({ stage, cleared, correctCount, total, outcome, onRetry }: StageResultProps) {
+  const { play } = useSound();
   const links = resultLinks(stage, { cleared, improved: outcome.improved, before: outcome.before });
   const score = useCountUp(outcome.score, SCORE_COUNT_MS, 0);
   return (
@@ -101,7 +103,10 @@ function ResultBody({ stage, cleared, correctCount, total, outcome, onRetry }: S
         <AppButton
           variant={cleared && links.nextHref ? "primary" : "cta"}
           size={cleared && links.nextHref ? "lg" : "xl"}
-          onClick={onRetry}
+          onClick={() => {
+            play("decide");
+            onRetry();
+          }}
         >
           もういちど
         </AppButton>

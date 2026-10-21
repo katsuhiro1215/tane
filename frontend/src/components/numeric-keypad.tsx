@@ -1,6 +1,7 @@
 "use client";
 
 import { appButtonVariants } from "@/components/app/button";
+import { useSound } from "@/components/app/sound-provider";
 import { appendDigit, canSubmit, removeLastDigit } from "@/lib/game/answer-input";
 import { cn } from "@/lib/utils";
 
@@ -16,11 +17,13 @@ interface NumericKeypadProps {
 const DIGIT_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK"];
 
 export function NumericKeypad({ value, onChange, onSubmit, disabled, maxLength }: NumericKeypadProps) {
+  const { play } = useSound();
   function handleKeyPress(key: string) {
     if (disabled) {
       return;
     }
     if (key === "⌫") {
+      play("cancel");
       onChange(removeLastDigit(value));
       return;
     }
@@ -30,6 +33,7 @@ export function NumericKeypad({ value, onChange, onSubmit, disabled, maxLength }
       }
       return;
     }
+    play("key");
     onChange(appendDigit(value, key, maxLength));
   }
 

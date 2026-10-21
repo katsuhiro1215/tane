@@ -1,18 +1,24 @@
 # 音
 
-Spra Go（`projects/Spra-go/frontend/public/sounds/`）からコピーしたもの。2026-10-14。
+効果音は、最初は Spra Go（`projects/Spra-go/frontend/public/sounds/`）からコピーしたもの（2026-10-14）。2026-10-21 に、正解・不正解・数字キー・消す・段が上がる・フィーバー開始を Owner が選んだ音に入れ替えた（元は `company/spra/spra-theme/assets/`）。
 
 | ファイル | 鳴らす場面 |
 |---|---|
-| correct.mp3 | 正解 |
-| incorrect.mp3 | 不正解 |
+| correct.mp3 | 正解（きらきら。長い元の音を1.4秒に切った） |
+| incorrect.mp3 | 不正解（クイズ不正解1） |
 | allCorrect.mp3 | ステージクリア |
 | coin.mp3 | タネが育った |
-| decide41.mp3 | ボタン（`select`） |
-| bgm-home.mp3 | ホーム・ステージ選択・なかま・せってい |
-| bgm-quiz.mp3 | プレイ中 |
-| bgm-minigame.mp3 | フィーバー中（プレイ画面から切り替える） |
+| decide.mp3 | 「はじめる」「つづきから」など決めるとき（`decide`。決定ボタンを押す4を1.5秒に切った） |
+| decide41.mp3 | 何かを選んだとき（`select`。ステージ選び、なかまをさわる、にわに出す） |
+| key.mp3 | 数字キーを打つ（決定ボタンを押す51） |
+| cancel.mp3 | ⌫で消す（キャンセル5） |
+| levelup.mp3 | チャレンジの段が上がる |
+| throw.mp3 | 種をタップしたとき（ひゅっ。テニスラケットで打つ1） |
+| gauge.mp3 | ゲージが満タンになってフィーバーが始まる（ゲージ回復1） |
+| bgm-tane-home.mp3 | ホーム・ステージ選択・なかま・せってい |
+| bgm-tane-play.mp3 | プレイ中 |
+| bgm-tane-fever.mp3 | フィーバー中（プレイ画面から切り替える） |
 
 - 効果音は「効果音ラボ」（https://soundeffect-lab.info/）の素材。商用利用可・クレジット不要。**音声ファイル単体の再配布は禁止**のため、このリポジトリを公開するときは sounds の中身を含めないこと
-- BGM は Suno で制作したもの（Spra Go と同じ。制作記録: `company/spra/spra-theme/`）
+- BGM は Suno で制作した **Tane 専用の曲**（2026-10-21 に Spra Go の曲から入れ替え）。制作記録: `company/spra/spra-theme/docs/2026-10-21-tane-bgm-record.md`
 - 鳴らす仕組みは `src/components/app/sound-provider.tsx`、ファイルの一覧は `src/lib/sound-files.ts`

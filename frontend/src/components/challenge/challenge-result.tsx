@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { useSound } from "@/components/app/sound-provider";
 import { AppButton, appButtonVariants } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { MEDAL_LABELS, MedalBadge } from "@/components/challenge/medal-badge";
@@ -29,6 +30,7 @@ export function ChallengeResult({
   outcome: ChallengeOutcome;
   onRetry: () => void;
 }) {
+  const { play } = useSound();
   const score = useCountUp(outcome.score, SCORE_COUNT_MS, 0);
   const best = Math.max(outcome.score, outcome.bestBefore ?? 0);
   const { medal, upgraded: medalUp } = resultMedal(modeId, outcome.score, outcome.bestBefore);
@@ -67,7 +69,10 @@ export function ChallengeResult({
         )}
       </Panel>
       <div className="flex flex-col gap-3">
-        <AppButton variant="cta" size="xl" onClick={onRetry}>
+        <AppButton variant="cta" size="xl" onClick={() => {
+            play("decide");
+            onRetry();
+          }}>
           もういちど
         </AppButton>
         <Link href="/challenge" className={appButtonVariants({ variant: "cream", size: "lg" })}>

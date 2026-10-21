@@ -12,7 +12,7 @@ it("プレイ画面はクイズ用、それ以外はホーム用", () => {
 });
 
 it("フィーバーの曲がある（画面のURLからは選ばれない）", () => {
-  expect(BGM_FILES.fever).toBe("/sounds/bgm-minigame.mp3");
+  expect(BGM_FILES.fever).toBe("/sounds/bgm-tane-fever.mp3");
   expect(bgmTrackFor("/stage/add-1")).not.toBe("fever");
 });
 
