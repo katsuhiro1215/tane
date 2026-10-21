@@ -70,7 +70,8 @@ function nextToPlayInMode(mode: ModeId, stars: StarMap): Stage | undefined {
 }
 
 export function continueTarget(stars: StarMap, lastModeId?: ModeId): Stage {
-  const start = lastModeId ?? "add";
+  // 初めての人は、メインの「たねまき」から始める
+  const start = lastModeId ?? "shisoku";
   // そろばんは、最後に遊んだあそびのときだけ続きを探す。四則演算とフラッシュを回るときは、そろばんに飛ばさない
   const cycle = start === "soroban" ? MODE_IDS : MODE_IDS.filter((mode) => mode !== "soroban");
   const startIndex = cycle.indexOf(start);

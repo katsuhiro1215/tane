@@ -73,7 +73,7 @@ export function StageCard({ stage, total, stars, unlocked, onPrev, onNext, onSta
         </AppButton>
       </div>
       {!unlocked && (
-        <p className="mt-2 text-center text-xs font-bold text-muted-foreground">まえのステージを クリアしてね</p>
+        <p className="mt-2 text-center text-xs font-bold text-muted-foreground">{stage.kind === "seed" ? "まえのステージで ★3を とってね" : "まえのステージを クリアしてね"}</p>
       )}
     </Panel>
   );

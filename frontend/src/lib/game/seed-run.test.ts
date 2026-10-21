@@ -121,3 +121,14 @@ describe("single（1問ずつ）と制限時間", () => {
     expect(run.status).toBe("timeup");
   });
 });
+
+it("1問ずつのあそびで間違えたら、次は同じ問題を出さない", () => {
+  const two: SeedFieldConfig = { rule: { op: "add", a: { oneOf: [1] }, b: { oneOf: [1, 2] } }, fallMs: 7000, simultaneous: 2, single: true, blank: true };
+  for (let i = 0; i < 50; i++) {
+    let run = createRun(two, "minute");
+    const before = run.field.seeds[0];
+    run = tapRun(run, before.id, before.problem.answer + 5).run;
+    run = stepRun(run, MAX_TICK_MS, two).run;
+    expect(run.field.seeds[0].problem.text).not.toBe(before.problem.text);
+  }
+});

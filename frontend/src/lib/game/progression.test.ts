@@ -68,8 +68,8 @@ describe("isChallengeUnlocked", () => {
 });
 
 describe("continueTarget（設計書3.5）", () => {
-  it("記録がなければ たしざん1", () => {
-    expect(continueTarget({}).id).toBe("add-1");
+  it("記録がなければ、メインのたねまき1-1", () => {
+    expect(continueTarget({}).id).toBe("shisoku-1");
   });
 
   it("1. 最後に遊んだあそびの、開いていて★0の最初", () => {
@@ -135,7 +135,8 @@ describe("そろばん（設計書2.3・2.4）", () => {
 
   it("そろばんは、最後に遊んだあそびのときだけ続きを探す（四則演算・フラッシュは飛ばない）", () => {
     expect(continueTarget({ ...cleared("flash", 6), ...cleared("shisoku", 20, 5) } as StarMap, "flash").id).toBe("add-1");
-    expect(continueTarget({}, undefined).id).toBe("add-1");
+    // 初めての人は、メインの「たねまき」から始める
+    expect(continueTarget({}, undefined).id).toBe("shisoku-1");
   });
 
   it("つづきからも同じ決め方", () => {

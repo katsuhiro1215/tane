@@ -72,7 +72,9 @@ export function tapRun(run: SeedRun, seedId: number, input: number): { run: Seed
   if (tapped.result === "none" || !tapped.seed) return { run, events: [] };
   if (tapped.result === "wrong") {
     // 1問ずつのあそびは、同じ問題で何度も試せないように、間違えたら次の問題に進む
-    const field = run.single ? { ...run.field, seeds: run.field.seeds.filter((s) => s.id !== seedId) } : run.field;
+    const field = run.single
+      ? { ...run.field, seeds: run.field.seeds.filter((s) => s.id !== seedId), previousText: tapped.seed.problem.text }
+      : run.field;
     return { run: miss({ ...run, field }), events: [{ kind: "miss", cause: "wrong" }] };
   }
   const combo = run.combo + 1;

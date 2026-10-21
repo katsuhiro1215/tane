@@ -9,6 +9,7 @@ import { StarsRow } from "@/components/app/stars-row";
 import { useCountUp } from "@/components/play/use-count-up";
 import { unlockStars, type SeedStage } from "@/data/stages/catalog";
 import type { SeedRunMode } from "@/lib/game/seed-run";
+import { seedResultNotes } from "@/lib/game/seed-stars";
 import type { Stars } from "@/lib/game/stars";
 import { resultLinks } from "@/lib/result-links";
 import { SPRU_POSES } from "@/lib/spru-images";
@@ -36,11 +37,15 @@ export function SeedResult({ stage, outcome, onRetry }: { stage: SeedStage; outc
   const minute = outcome.mode === "minute";
   const passed = outcome.stars >= unlockStars(stage);
   const links = resultLinks(stage, { cleared: minute && passed, improved: outcome.improved, before: outcome.before });
-  const nextNeed =
-    minute && !outcome.defeated && outcome.stars < 5
-      ? stage.rule.thresholds[outcome.stars as 0 | 1 | 2 | 3 | 4] - outcome.correct
-      : null;
-  const title = minute ? (outcome.stars > 0 ? "ステージクリア！" : outcome.defeated ? "ざんねん…" : "もうすこし！") : "おつかれさま！";
+  const notes = seedResultNotes({
+    stars: outcome.stars,
+    correct: outcome.correct,
+    mistakes: outcome.mistakes,
+    defeated: outcome.defeated,
+    thresholds: stage.rule.thresholds,
+    unlockStars: unlockStars(stage),
+  });
+  const title = minute ? notes.title : "おつかれさま！";
 
   return (
     <main className="flex flex-1 flex-col justify-center gap-4 p-6">
@@ -77,14 +82,12 @@ export function SeedResult({ stage, outcome, onRetry }: { stage: SeedStage; outc
             )}
           </p>
         )}
-        {nextNeed !== null && nextNeed > 0 && (
-          <p className="font-display text-sm font-black text-[#2b6fa3]">
-            あと {nextNeed}もんで ★{outcome.stars + 1}！
-          </p>
-        )}
-        {minute && outcome.defeated && (
-          <p className="text-sm font-bold text-muted-foreground">HPが なくなると ★は もらえないよ</p>
-        )}
+        {minute &&
+          notes.hints.map((hint) => (
+            <p key={hint} className="font-display text-sm font-black text-[#2b6fa3]">
+              {hint}
+            </p>
+          ))}
         {minute && outcome.improved && (
           <p className="font-display text-sm font-black text-primary">タネが そだったよ！ みにいこう</p>
         )}

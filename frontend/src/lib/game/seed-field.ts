@@ -33,6 +33,8 @@ export interface SeedField {
   seeds: Seed[];
   nextId: number;
   sinceSpawnMs: number;
+  /** 最後に画面から消えた問題の式。次に同じ問題を続けて出さない */
+  previousText?: string;
 }
 
 type Rng = () => number;
@@ -45,11 +47,14 @@ function spawn(field: SeedField, config: SeedFieldConfig, rng: Rng): SeedField {
   const draw = config.blank ? drawBlankSeedProblem : drawSeedProblem;
   const problem = draw(
     config.rule,
-    { answers: field.seeds.map((s) => s.problem.answer), texts: field.seeds.map((s) => s.problem.text) },
+    {
+      answers: field.seeds.map((s) => s.problem.answer),
+      texts: [...field.seeds.map((s) => s.problem.text), ...(field.previousText ? [field.previousText] : [])],
+    },
     rng
   );
   const seed: Seed = { id: field.nextId, lane, problem, ageMs: 0, progress: 0 };
-  return { seeds: [...field.seeds, seed], nextId: field.nextId + 1, sinceSpawnMs: 0 };
+  return { ...field, seeds: [...field.seeds, seed], nextId: field.nextId + 1, sinceSpawnMs: 0 };
 }
 
 export function createField(config: SeedFieldConfig, rng: Rng = Math.random): SeedField {
@@ -82,6 +87,7 @@ export function tick(
     seeds: moved.filter((seed) => seed.progress < 1),
     nextId: field.nextId,
     sinceSpawnMs: field.sinceSpawnMs + dt,
+    previousText: landed.length > 0 ? landed[landed.length - 1].problem.text : field.previousText,
   };
   // 画面が空になったら待たずに出す。そうでなければ間隔が空いてから
   const due = next.seeds.length === 0 || next.sinceSpawnMs >= SPAWN_GAP_MS;
@@ -98,5 +104,9 @@ export function tapSeed(
   const seed = field.seeds.find((s) => s.id === seedId);
   if (!seed) return { field, result: "none" };
   if (seed.problem.answer !== input) return { field, result: "wrong", seed };
-  return { field: { ...field, seeds: field.seeds.filter((s) => s.id !== seedId) }, result: "correct", seed };
+  return {
+    field: { ...field, seeds: field.seeds.filter((s) => s.id !== seedId), previousText: seed.problem.text },
+    result: "correct",
+    seed,
+  };
 }

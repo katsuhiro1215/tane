@@ -24,3 +24,28 @@ export function starsForSeedRun(input: {
   const penalized = input.mistakes >= SEED_PENALTY_MISTAKES ? base - 1 : base;
   return Math.max(1, penalized) as SeedStars;
 }
+
+/** 結果画面の見出しと案内。★3未満では次のステージが開かないので、「クリア」とは言わずに★3を目ざすよう伝える */
+export function seedResultNotes(input: {
+  stars: SeedStars;
+  correct: number;
+  mistakes: number;
+  defeated: boolean;
+  thresholds: SeedThresholds;
+  unlockStars: number;
+}): { title: string; hints: string[] } {
+  if (input.defeated) return { title: "ざんねん…", hints: ["HPが なくなると ★は もらえないよ"] };
+  const title = input.stars >= input.unlockStars ? "ステージクリア！" : input.stars > 0 ? "★ゲット！" : "もうすこし！";
+  const hints: string[] = [];
+  if (input.stars < input.unlockStars) hints.push(`★${input.unlockStars}で つぎの ステージが ひらくよ`);
+  if (input.stars < 5) {
+    // ミスで★が1つ減っているときは、正解の数を増やしても表示どおりには★が増えない
+    if (input.mistakes >= SEED_PENALTY_MISTAKES && input.stars > 0) {
+      hints.push(`ミスを ${SEED_PENALTY_MISTAKES - 1}かいまでに すると ★が ふえるよ`);
+    } else {
+      const need = input.thresholds[input.stars as 0 | 1 | 2 | 3 | 4] - input.correct;
+      if (need > 0) hints.push(`あと ${need}もんで ★${input.stars + 1}！`);
+    }
+  }
+  return { title, hints };
+}
