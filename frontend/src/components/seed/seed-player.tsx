@@ -217,6 +217,7 @@ export function SeedPlayer({ stageId }: { stageId: string }) {
   function tap(seedId: number) {
     const live = runRef.current;
     if (phase !== "playing" || !live || inputValue === "") return;
+    play("throw");
     const out = tapRun(live, seedId, Number(inputValue));
     runRef.current = out.run;
     queueRef.current.push(...out.events);

@@ -1,6 +1,6 @@
 import type { BgmTrack } from "@/lib/bgm-route";
 
-export type SoundKey = "correct" | "incorrect" | "allCorrect" | "coin" | "select" | "key" | "cancel" | "levelUp" | "gauge";
+export type SoundKey = "correct" | "incorrect" | "allCorrect" | "coin" | "select" | "key" | "cancel" | "levelUp" | "gauge" | "throw";
 
 export const SOUND_FILES: Record<SoundKey, string> = {
   correct: "/sounds/correct.mp3",
@@ -12,6 +12,7 @@ export const SOUND_FILES: Record<SoundKey, string> = {
   cancel: "/sounds/cancel.mp3",
   levelUp: "/sounds/levelup.mp3",
   gauge: "/sounds/gauge.mp3",
+  throw: "/sounds/throw.mp3",
 };
 
 export const BGM_FILES: Record<BgmTrack, string> = {
