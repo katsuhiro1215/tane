@@ -123,6 +123,22 @@ export const FRIENDS: Readonly<Record<string, FriendProfile>> = {
   "shisoku-34": { name: "サガソウ", line: "2けたの むしくいも おまかせ" },
   "shisoku-35": { name: "ヒソヒソ", line: "ひきざんの？も みつけちゃう" },
   "shisoku-36": { name: "カンペキ", line: "むしくい たつじんに なったよ" },
+  "shisoku-37": { name: "ニバイ", line: "2の だん、まかせて！" },
+  "shisoku-38": { name: "サンヨン", line: "3と 4の だんだよ" },
+  "shisoku-39": { name: "ロクシチ", line: "6と 7、ちょっと むずかしい？" },
+  "shisoku-40": { name: "ハチック", line: "8と 9も へいき！" },
+  "shisoku-41": { name: "イチゴ", line: "1から 5の だん、まとめて" },
+  "shisoku-42": { name: "クックン", line: "くく ぜんぶ いえるよ" },
+  "shisoku-43": { name: "ゼロゾエ", line: "0を つけると はやいよ" },
+  "shisoku-44": { name: "クククン", line: "くくの たつじんに なったよ" },
+  "shisoku-45": { name: "ワルニ", line: "2と 5で わるよ" },
+  "shisoku-46": { name: "ワルサン", line: "3と 4で わるよ" },
+  "shisoku-47": { name: "ワルロク", line: "6と 7で わるよ" },
+  "shisoku-48": { name: "ワルハチ", line: "8と 9で わるよ" },
+  "shisoku-49": { name: "ワリキリ", line: "くくの わりざん ぜんぶ！" },
+  "shisoku-50": { name: "マゼワリ", line: "いろんな だんで わるよ" },
+  "shisoku-51": { name: "ゴッチャ", line: "かずが まざっても わりざん" },
+  "shisoku-52": { name: "ドコカナ", line: "わりざんの？も さがせるよ" },
 };
 
 // 色の呼び名は設計書の付録B

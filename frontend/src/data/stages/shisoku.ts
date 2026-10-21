@@ -2,6 +2,8 @@ import { range, type ArithmeticRule } from "@/lib/game/problem-rules";
 import type { DivModRule } from "@/lib/game/remainder-division";
 
 import { ADD_STAGE_SPECS } from "./add";
+import { DIV_STAGE_SPECS } from "./div";
+import { MUL_STAGE_SPECS } from "./mul";
 import { SUB_STAGE_SPECS } from "./sub";
 import type { SeedThresholds } from "@/lib/game/seed-stars";
 
@@ -39,6 +41,10 @@ export const SHISOKU_GROUP_NAMES = [
   "ひきざん2けた（ひっさん）",
   "たしひき2けた ごちゃまぜ",
   "たしひき2けたの むしくい",
+  "かけざん くく",
+  "かけざん くく ぜんぶ",
+  "わりざん くく",
+  "わりざん くく ぜんぶ",
 ] as const;
 
 // グループ1は「たし算（きほん）」、グループ2は「ひき算（きほん）」。それぞれ今のたしざん・ひきざんの1〜4と同じ中身で、ゆっくり上げていく（Owner 決定）
@@ -117,6 +123,96 @@ const G6_G9: StageSpec<SeedStageRule>[] = [
   })),
 ];
 
+// グループ10「かけざん くく」・11「かけざん くく ぜんぶ」
+const MUL_KUKU_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 8500, simultaneous: 2, thresholds: [7, 12, 17, 22, 27] },
+  { fallMs: 8500, simultaneous: 2, thresholds: [7, 12, 17, 22, 27] },
+  { fallMs: 8000, simultaneous: 2, thresholds: [6, 11, 16, 21, 26] },
+  { fallMs: 8000, simultaneous: 2, thresholds: [6, 11, 16, 21, 26] },
+];
+const MUL_ZENBU_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 7500, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
+  { fallMs: 7500, simultaneous: 2, thresholds: [6, 10, 14, 18, 22] },
+  { fallMs: 7500, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 7000, simultaneous: 3, thresholds: [5, 9, 13, 17, 21] },
+];
+
+// グループ12「わりざん くく」・13「わりざん くく ぜんぶ」
+const DIV_KUKU_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 8500, simultaneous: 2, thresholds: [6, 11, 16, 21, 26] },
+  { fallMs: 8500, simultaneous: 2, thresholds: [6, 11, 16, 21, 26] },
+  { fallMs: 8000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 8000, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+];
+const DIV_ZENBU_SEED: Omit<SeedStageRule, "rule">[] = [
+  { fallMs: 7500, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 7500, simultaneous: 2, thresholds: [5, 9, 13, 17, 21] },
+  { fallMs: 7000, simultaneous: 3, thresholds: [4, 7, 10, 13, 16] },
+  { fallMs: 7000, simultaneous: 2, thresholds: [7, 12, 17, 22, 27], blank: true, single: true, roundMs: BLANK_ROUND_MS },
+];
+
+const G10_G13: StageSpec<SeedStageRule>[] = [
+  ...[0, 1, 2, 3].map((i) => ({
+    name: MUL_STAGE_SPECS[i].name,
+    description: SHISOKU_GROUP_NAMES[9],
+    rule: { rule: MUL_STAGE_SPECS[i].rule, ...MUL_KUKU_SEED[i] },
+  })),
+  {
+    name: MUL_STAGE_SPECS[4].name,
+    description: SHISOKU_GROUP_NAMES[10],
+    rule: { rule: MUL_STAGE_SPECS[4].rule, ...MUL_ZENBU_SEED[0] },
+  },
+  {
+    name: MUL_STAGE_SPECS[5].name,
+    description: SHISOKU_GROUP_NAMES[10],
+    rule: { rule: MUL_STAGE_SPECS[5].rule, ...MUL_ZENBU_SEED[1] },
+  },
+  {
+    name: MUL_STAGE_SPECS[6].name,
+    description: SHISOKU_GROUP_NAMES[10],
+    rule: { rule: MUL_STAGE_SPECS[6].rule, ...MUL_ZENBU_SEED[2] },
+  },
+  {
+    name: "まぜこぜ ぜんぶ",
+    description: SHISOKU_GROUP_NAMES[10],
+    rule: {
+      rule: { op: "mix" as const, rules: [MUL_STAGE_SPECS[4].rule, MUL_STAGE_SPECS[5].rule, MUL_STAGE_SPECS[6].rule] },
+      ...MUL_ZENBU_SEED[3],
+    },
+  },
+  ...[0, 1, 2, 3].map((i) => ({
+    name: DIV_STAGE_SPECS[i].name,
+    description: SHISOKU_GROUP_NAMES[11],
+    rule: { rule: DIV_STAGE_SPECS[i].rule, ...DIV_KUKU_SEED[i] },
+  })),
+  {
+    name: DIV_STAGE_SPECS[4].name,
+    description: SHISOKU_GROUP_NAMES[12],
+    rule: { rule: DIV_STAGE_SPECS[4].rule, ...DIV_ZENBU_SEED[0] },
+  },
+  {
+    name: DIV_STAGE_SPECS[5].name,
+    description: SHISOKU_GROUP_NAMES[12],
+    rule: { rule: DIV_STAGE_SPECS[5].rule, ...DIV_ZENBU_SEED[1] },
+  },
+  {
+    name: "まぜこぜ ぜんぶ",
+    description: SHISOKU_GROUP_NAMES[12],
+    rule: {
+      rule: {
+        op: "mix" as const,
+        rules: [DIV_STAGE_SPECS[0].rule, DIV_STAGE_SPECS[1].rule, DIV_STAGE_SPECS[2].rule, DIV_STAGE_SPECS[3].rule],
+      },
+      ...DIV_ZENBU_SEED[2],
+    },
+  },
+  {
+    name: `むしくい ${DIV_STAGE_SPECS[4].name}`,
+    description: SHISOKU_GROUP_NAMES[12],
+    rule: { rule: DIV_STAGE_SPECS[4].rule, ...DIV_ZENBU_SEED[3] },
+  },
+];
+
 export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
   {
     name: "こたえが5まで",
@@ -159,5 +255,6 @@ export const SHISOKU_STAGE_SPECS: StageSpec<SeedStageRule>[] = [
     rule: { rule: spec.rule, ...BLANK_SEED[i] },
   })),
   ...G6_G9,
+  ...G10_G13,
 ];
 
