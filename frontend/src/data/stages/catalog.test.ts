@@ -20,14 +20,15 @@ import {
 import { SPRU_COLORS } from "@/data/stages/colors";
 import { generateFlashProblem } from "@/lib/game/flash-problem";
 import { generateProblems, MAX_ANSWER, satisfiesRule } from "@/lib/game/problem-rules";
+import { generateDivModProblem } from "@/lib/game/remainder-division";
 
 const N = 2000;
 const arithmetic = STAGES.filter((s): s is Extract<Stage, { kind: "arithmetic" }> => s.kind === "arithmetic");
 
 describe("ステージの数とid", () => {
-  it("全部で100、あそびごとに12・12・12・12・6・26・20", () => {
-    expect(STAGES).toHaveLength(100);
-    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 20]);
+  it("全部で180、あそびごとに12・12・12・12・6・26・100", () => {
+    expect(STAGES).toHaveLength(180);
+    expect(MODE_IDS.map((mode) => stagesOfMode(mode).length)).toEqual([12, 12, 12, 12, 6, 26, 100]);
   });
 
   it("idは `<あそび>-<番号>` で重複しない", () => {
@@ -188,8 +189,8 @@ describe("目安の秒数と目標タイム（設計書2.5）", () => {
 describe("しそくえんざん（種が降る）", () => {
   const list = stagesOfMode("shisoku");
 
-  it("20ステージで、idは shisoku-1〜20、遊ぶ場所は /seed/", () => {
-    expect(list.map((s) => s.id)).toEqual(Array.from({ length: 20 }, (_, i) => `shisoku-${i + 1}`));
+  it("100ステージで、idは shisoku-1〜100、遊ぶ場所は /seed/", () => {
+    expect(list.map((s) => s.id)).toEqual(Array.from({ length: 100 }, (_, i) => `shisoku-${i + 1}`));
     expect(playPath(list[0])).toBe("/seed/shisoku-1");
     expect(list.every((s) => s.kind === "seed" && !s.isBoss)).toBe(true);
   });
@@ -201,30 +202,139 @@ describe("しそくえんざん（種が降る）", () => {
     expect(unlockStars(getStage("add-1")!)).toBe(1);
   });
 
-  it("表示の番号は 1-1〜1-4、2-1〜2-4。ほかは番号のまま", () => {
-    expect(list.map((s) => displayNumber(s))).toEqual(["1-1", "1-2", "1-3", "1-4", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "3-4",
+  it("表示の番号は 1-1〜1-4、2-1〜2-4…9-1〜9-4。ほかは番号のまま", () => {
+    expect(list.slice(0, 20).map((s) => displayNumber(s))).toEqual(["1-1", "1-2", "1-3", "1-4", "2-1", "2-2", "2-3", "2-4", "3-1", "3-2", "3-3", "3-4",
       "4-1", "4-2", "4-3", "4-4", "5-1", "5-2", "5-3", "5-4"]);
+    expect(list.slice(20, 36).map((s) => displayNumber(s))).toEqual([
+      "6-1", "6-2", "6-3", "6-4", "7-1", "7-2", "7-3", "7-4", "8-1", "8-2", "8-3", "8-4", "9-1", "9-2", "9-3", "9-4",
+    ]);
     expect(list.slice(4, 8).map((s) => s.description)).toEqual(Array(4).fill("ひきざん（きほん）"));
     expect(list.slice(8, 12).map((s) => s.description)).toEqual(Array(4).fill("たしざん・ひきざん ごちゃまぜ"));
+    expect(list.slice(20, 24).map((s) => s.description)).toEqual(Array(4).fill("たしざん2けた（ひっさん）"));
+    expect(list.slice(24, 28).map((s) => s.description)).toEqual(Array(4).fill("ひきざん2けた（ひっさん）"));
+    expect(list.slice(28, 32).map((s) => s.description)).toEqual(Array(4).fill("たしひき2けた ごちゃまぜ"));
+    expect(list.slice(32, 36).map((s) => s.description)).toEqual(Array(4).fill("たしひき2けたの むしくい"));
+    expect(list.slice(36, 52).map((s) => displayNumber(s))).toEqual([
+      "10-1", "10-2", "10-3", "10-4", "11-1", "11-2", "11-3", "11-4",
+      "12-1", "12-2", "12-3", "12-4", "13-1", "13-2", "13-3", "13-4",
+    ]);
+    expect(list.slice(36, 40).map((s) => s.description)).toEqual(Array(4).fill("かけざん くく"));
+    expect(list.slice(40, 44).map((s) => s.description)).toEqual(Array(4).fill("かけざん くく ぜんぶ"));
+    expect(list.slice(44, 48).map((s) => s.description)).toEqual(Array(4).fill("わりざん くく"));
+    expect(list.slice(48, 52).map((s) => s.description)).toEqual(Array(4).fill("わりざん くく ぜんぶ"));
+    expect(list.slice(52, 68).map((s) => displayNumber(s))).toEqual([
+      "14-1", "14-2", "14-3", "14-4", "15-1", "15-2", "15-3", "15-4",
+      "16-1", "16-2", "16-3", "16-4", "17-1", "17-2", "17-3", "17-4",
+    ]);
+    expect(list.slice(52, 56).map((s) => s.description)).toEqual(Array(4).fill("かけざん・わりざん ごちゃまぜ"));
+    expect(list.slice(56, 60).map((s) => s.description)).toEqual(Array(4).fill("かけざん ひっさん"));
+    expect(list.slice(60, 64).map((s) => s.description)).toEqual(Array(4).fill("わりざん あまりあり（かんたん）"));
+    expect(list.slice(64, 68).map((s) => s.description)).toEqual(Array(4).fill("たしざん・ひきざん3けた"));
+    expect(list.slice(68, 84).map((s) => displayNumber(s))).toEqual([
+      "18-1", "18-2", "18-3", "18-4", "19-1", "19-2", "19-3", "19-4",
+      "20-1", "20-2", "20-3", "20-4", "21-1", "21-2", "21-3", "21-4",
+    ]);
+    expect(list.slice(68, 72).map((s) => s.description)).toEqual(Array(4).fill("たしひき3けたの むしくい"));
+    expect(list.slice(72, 76).map((s) => s.description)).toEqual(Array(4).fill("よんそく ごちゃまぜ（2けた）"));
+    expect(list.slice(76, 80).map((s) => s.description)).toEqual(Array(4).fill("かけざん 2けた×2けた"));
+    expect(list.slice(80, 84).map((s) => s.description)).toEqual(Array(4).fill("わりざん あまりあり（むずかしい）"));
+    expect(list.slice(84, 100).map((s) => displayNumber(s))).toEqual([
+      "22-1", "22-2", "22-3", "22-4", "23-1", "23-2", "23-3", "23-4",
+      "24-1", "24-2", "24-3", "24-4", "25-1", "25-2", "25-3", "25-4",
+    ]);
+    expect(list.slice(84, 88).map((s) => s.description)).toEqual(Array(4).fill("わりざん 大きい数"));
+    expect(list.slice(88, 92).map((s) => s.description)).toEqual(Array(4).fill("よんそく ぜんぶ むしくい"));
+    expect(list.slice(92, 96).map((s) => s.description)).toEqual(Array(4).fill("大きい数 ごちゃまぜ"));
+    expect(list.slice(96, 100).map((s) => s.description)).toEqual(Array(4).fill("ボス：ぜんぶ まぜまぜ"));
     expect(displayNumber(getStage("add-3")!)).toBe("3");
   });
 
-  it("むしくいは、降らずに1問ずつ・2分。ふつうのグループは降る・1分", () => {
+  it("G25（ボス）は、しそくえんざんの中でいちばん広い範囲を混ぜる", () => {
+    const boss = list[99];
+    if (boss.kind !== "seed") throw new Error("seed stage expected");
+    expect(boss.rule.rule.op).toBe("mix");
+  });
+
+  it("G20は4ステージで出し方が変わる（ふつう・筆算・むしくい・まぜこぜ）。同じステージでは混ぜない", () => {
+    const [flat, column, blank, mix] = list.slice(76, 80);
+    if (flat.kind !== "seed" || column.kind !== "seed" || blank.kind !== "seed" || mix.kind !== "seed") {
+      throw new Error("seed stage expected");
+    }
+    expect(flat.rule.layout).toBeUndefined();
+    expect(flat.rule.blank).toBeUndefined();
+    expect(column.rule.layout).toBe("column");
+    expect(blank.rule.blank).toBe(true);
+    expect(blank.rule.single).toBe(true);
+    expect(mix.rule.rule.op).toBe("mix");
+  });
+
+  it("G21（あまりあり・むずかしい）も pair モード", () => {
+    for (const stage of list.slice(80, 84)) {
+      if (stage.kind !== "seed" || !stage.rule.pair) throw new Error("pair stage expected");
+      const p = generateDivModProblem(stage.rule.pair);
+      expect(p.remainder).toBeGreaterThanOrEqual(1);
+      expect(p.remainder).toBeLessThan(p.b);
+    }
+  });
+
+  it("G15（かけざん ひっさん）は column", () => {
+    for (const stage of list.slice(56, 60)) {
+      if (stage.kind !== "seed") throw new Error("seed stage expected");
+      expect(stage.rule.layout).toBe("column");
+    }
+  });
+
+  it("G16（あまりあり・かんたん）は pair モード。商とあまりが解ける", () => {
+    for (const stage of list.slice(60, 64)) {
+      if (stage.kind !== "seed" || !stage.rule.pair) throw new Error("pair stage expected");
+      for (let i = 0; i < 30; i++) {
+        const p = generateDivModProblem(stage.rule.pair);
+        expect(p.remainder).toBeGreaterThanOrEqual(1);
+        expect(p.remainder).toBeLessThan(p.b);
+        expect(p.a).toBe(p.b * p.quotient + p.remainder);
+      }
+    }
+  });
+
+  it("G11の4つ目、G13の3つ目は mix。G13の4つ目はむしくい", () => {
+    const g11_4 = list[43];
+    const g13_3 = list[50];
+    const g13_4 = list[51];
+    if (g11_4.kind !== "seed" || g13_3.kind !== "seed" || g13_4.kind !== "seed") throw new Error("seed stage expected");
+    expect(g11_4.rule.rule.op).toBe("mix");
+    expect(g11_4.rule.simultaneous).toBe(3);
+    expect(g13_3.rule.rule.op).toBe("mix");
+    expect(g13_3.rule.simultaneous).toBe(3);
+    expect(g13_4.rule.blank).toBe(true);
+    expect(g13_4.rule.single).toBe(true);
+  });
+
+  it("筆算（column）のステージには display 付きの問題が作れる", () => {
+    for (const stage of list.slice(20, 28)) {
+      if (stage.kind !== "seed") throw new Error("seed stage expected");
+      expect(stage.rule.layout).toBe("column");
+    }
+  });
+
+  it("むしくいは、降らずに1問ずつ・2分。あまりのあるわり算は別の画面なので対象外。ふつうのグループは降る・1分", () => {
     for (const stage of list) {
       if (stage.kind !== "seed") throw new Error("seed stage expected");
-      const blank = stage.number > 12;
-      expect(stage.rule.blank === true).toBe(blank);
+      if (stage.rule.pair) continue;
+      const blank = stage.rule.blank === true;
       expect(stage.rule.single === true).toBe(blank);
       expect(stage.rule.roundMs ?? 60_000).toBe(blank ? 120_000 : 60_000);
     }
   });
 
-  it("どのルールも50問ずつ作れて、答えは0〜999", () => {
+  it("どのルールも50問ずつ作れて、答えは0〜MAX_ANSWER", () => {
     for (const stage of list) {
       if (stage.kind !== "seed") throw new Error("seed stage expected");
+      // あまりのあるわり算（pair）は別の生成器（generateDivModProblem）を使うので対象外
+      if (stage.rule.pair) continue;
       for (const problem of generateProblems(stage.rule.rule, 50)) {
         expect(problem.answer).toBeGreaterThanOrEqual(0);
-        expect(problem.answer).toBeLessThanOrEqual(999);
+        // 3けた×1けたなどの筆算（G15）は、答えが999を超える。実際の上限は problem-rules.ts の MAX_ANSWER
+        expect(problem.answer).toBeLessThanOrEqual(MAX_ANSWER);
         expect(satisfiesRule(problem, stage.rule.rule)).toBe(true);
       }
     }
