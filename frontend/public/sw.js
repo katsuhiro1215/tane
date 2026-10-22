@@ -1,4 +1,4 @@
-const CACHE_NAME = "tane-cache-v2";
+const CACHE_NAME = "tane-cache-v3";
 const APP_SHELL = ["/manifest.json", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
