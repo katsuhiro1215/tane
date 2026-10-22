@@ -5,6 +5,7 @@ import "./globals.css";
 
 import { BgmRouter } from "@/components/app/bgm-router";
 import { SoundProvider } from "@/components/app/sound-provider";
+import { SyncProvider } from "@/components/app/sync-provider";
 import { PwaRegister } from "@/components/pwa-register";
 
 // 本文は Zen Maru Gothic（設計書4.4）
@@ -48,8 +49,10 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col text-foreground">
         <SoundProvider>
-          <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{children}</div>
-          <BgmRouter />
+          <SyncProvider>
+            <div className="mx-auto flex w-full max-w-md flex-1 flex-col">{children}</div>
+            <BgmRouter />
+          </SyncProvider>
         </SoundProvider>
         <PwaRegister />
       </body>

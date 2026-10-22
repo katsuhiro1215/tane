@@ -1,20 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  clearGuestProgress,
   EMPTY_PROGRESS,
   markTitleSeen,
   parseProgress,
   PROGRESS_KEY,
+  progressKeyFor,
+  readGuestProgress,
   readProgress,
   recordChallengeResult,
   recordEndlessResult,
   recordStageResult,
   rememberLastMode,
   resetProgress,
+  setProgressOwner,
   toggleGarden,
   withChallengeScore,
   withGardenToggle,
   withResult,
+  writeProgress,
 } from "@/lib/progress-store";
 import { SETTINGS_KEY } from "@/lib/settings-store";
 
@@ -296,6 +301,68 @@ describe("localStorage への読み書き", () => {
 
   it("壊れた値が入っていても空の記録として読める", () => {
     store.set(PROGRESS_KEY, "not json");
+    expect(readProgress()).toEqual(EMPTY_PROGRESS);
+  });
+});
+
+describe("プロフィールごとの記録の持ち主（progressKeyFor / setProgressOwner / writeProgress）", () => {
+  let store: Map<string, string>;
+
+  beforeEach(() => {
+    store = new Map();
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => void store.set(key, value),
+        removeItem: (key: string) => void store.delete(key),
+      },
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => true,
+    });
+  });
+
+  afterEach(() => {
+    setProgressOwner(null);
+    vi.unstubAllGlobals();
+  });
+
+  it("progressKeyFor: ゲストは tane:progress:v1、プロフィールは末尾に :p<id>", () => {
+    expect(progressKeyFor(null)).toBe(PROGRESS_KEY);
+    expect(progressKeyFor(5)).toBe(`${PROGRESS_KEY}:p5`);
+  });
+
+  it("setProgressOwner を切り替えると、readProgress・recordStageResult が別のキーを使う", () => {
+    recordStageResult("add-1", 1); // ゲストの記録
+    expect(store.get(PROGRESS_KEY)).toBeDefined();
+
+    setProgressOwner(5);
+    expect(readProgress()).toEqual(EMPTY_PROGRESS); // 子5の記録はまだ無い
+    recordStageResult("add-2", 1);
+    expect(store.get(`${PROGRESS_KEY}:p5`)).toBeDefined();
+    expect(JSON.parse(store.get(`${PROGRESS_KEY}:p5`)!).stars).toEqual({ "add-2": 1 });
+
+    // ゲストの記録は、子5の記録とは混ざらない
+    expect(JSON.parse(store.get(PROGRESS_KEY)!).stars).toEqual({ "add-1": 1 });
+
+    setProgressOwner(null);
+    expect(readProgress().stars).toEqual({ "add-1": 1 });
+  });
+
+  it("writeProgress は今の持ち主のキーに、まるごと書く", () => {
+    setProgressOwner(7);
+    writeProgress({ ...EMPTY_PROGRESS, stars: { "add-3": 2 } });
+    expect(readProgress().stars).toEqual({ "add-3": 2 });
+    expect(JSON.parse(store.get(`${PROGRESS_KEY}:p7`)!).stars).toEqual({ "add-3": 2 });
+  });
+
+  it("readGuestProgress・clearGuestProgress は、今の持ち主に関係なく、いつもゲストのキー", () => {
+    recordStageResult("add-1", 2); // ゲストに書く
+    setProgressOwner(9);
+    expect(readGuestProgress().stars).toEqual({ "add-1": 2 });
+    clearGuestProgress();
+    expect(readGuestProgress()).toEqual(EMPTY_PROGRESS);
+    // 持ち主（プロフィール9）の記録には影響しない
     expect(readProgress()).toEqual(EMPTY_PROGRESS);
   });
 });

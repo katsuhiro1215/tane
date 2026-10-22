@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 import { getStage, isModeId, maxStars, type ModeId } from "@/data/stages/catalog";
 import { isChallengeModeId, type ChallengeModeId } from "@/lib/game/challenge-rules";
 import { GARDEN_LIMIT, type StarMap } from "@/lib/game/progression";
@@ -196,7 +198,43 @@ function withPlayDayToday(progress: Progress, now: Date): { progress: Progress; 
   return { progress: { ...progress, playDays }, changed: true };
 }
 
-const store = createLocalStore(PROGRESS_KEY, parseProgress, EMPTY_PROGRESS);
+/** プロフィールごとの保存キー。null はゲスト（ログイン前・端末だけの記録） */
+export function progressKeyFor(profileId: number | null): string {
+  return profileId === null ? PROGRESS_KEY : `${PROGRESS_KEY}:p${profileId}`;
+}
+
+const storeCache = new Map<string, ReturnType<typeof createLocalStore<Progress>>>();
+
+function storeFor(key: string) {
+  let s = storeCache.get(key);
+  if (!s) {
+    s = createLocalStore(key, parseProgress, EMPTY_PROGRESS);
+    storeCache.set(key, s);
+  }
+  return s;
+}
+
+// 今、画面が読み書きしている先（既定はゲスト）。ログインして子を選ぶと setProgressOwner で切り替わる
+let currentKey = PROGRESS_KEY;
+// useSyncExternalStore 用の、持ち主の切り替え・値の変化をまとめて知らせるイベント（local-store.ts の per-key イベントとは別）
+const PROGRESS_CHANGED_EVENT = "tane:progress-changed";
+
+function dispatchProgressChanged() {
+  if (typeof window === "undefined") return;
+  try {
+    window.dispatchEvent(new Event(PROGRESS_CHANGED_EVENT));
+  } catch {
+    // テスト環境などで dispatchEvent が無くても遊ぶのに困らない
+  }
+}
+
+/** 記録の持ち主を切り替える（ログイン後、プロフィールを選んだとき／ログアウトしたとき） */
+export function setProgressOwner(profileId: number | null): void {
+  const key = progressKeyFor(profileId);
+  if (key === currentKey) return;
+  currentKey = key;
+  dispatchProgressChanged();
+}
 
 function removeLegacyKeys() {
   for (const key of LEGACY_KEYS) {
@@ -209,12 +247,45 @@ function removeLegacyKeys() {
 }
 
 function save(next: Progress) {
-  store.write(next);
+  storeFor(currentKey).write(next);
   removeLegacyKeys();
+  dispatchProgressChanged();
 }
 
-export const readProgress = store.read;
-export const useProgress = store.useValue;
+/** 記録をまるごと置き換える（同期で、サーバーと合わせた結果を書き込むときに使う） */
+export function writeProgress(next: Progress): void {
+  save(next);
+}
+
+export function readProgress(): Progress {
+  return storeFor(currentKey).read();
+}
+
+export function useProgress(): Progress {
+  return useSyncExternalStore(
+    (callback) => {
+      window.addEventListener(PROGRESS_CHANGED_EVENT, callback);
+      window.addEventListener("storage", callback);
+      return () => {
+        window.removeEventListener(PROGRESS_CHANGED_EVENT, callback);
+        window.removeEventListener("storage", callback);
+      };
+    },
+    readProgress,
+    () => EMPTY_PROGRESS
+  );
+}
+
+/** ログイン前・端末だけの記録（持ち主に関係なく、いつもゲストのキー） */
+export function readGuestProgress(): Progress {
+  return storeFor(PROGRESS_KEY).read();
+}
+
+/** ゲストの記録を空にする（引き継ぎが終わったあと） */
+export function clearGuestProgress(): void {
+  storeFor(PROGRESS_KEY).remove();
+  if (currentKey === PROGRESS_KEY) dispatchProgressChanged();
+}
 
 export function recordStageResult(
   stageId: string,
@@ -222,7 +293,7 @@ export function recordStageResult(
   score: number | null = null,
   now: Date = new Date()
 ): { improved: boolean; before: Stars; newBest: boolean; bestBefore: number | null } {
-  const current = store.read();
+  const current = storeFor(currentKey).read();
   const before: Stars = current.stars[stageId] ?? 0;
   const bestBefore = current.best[stageId] ?? null;
   const { progress: afterResult, improved, newBest } = withResult(current, stageId, stars, score);
@@ -236,7 +307,7 @@ export function recordChallengeResult(
   score: number,
   now: Date = new Date()
 ): { newBest: boolean; bestBefore: number | null } {
-  const current = store.read();
+  const current = storeFor(currentKey).read();
   const bestBefore = current.challengeBest[mode] ?? null;
   const { progress: afterResult, newBest } = withChallengeScore(current, mode, score);
   const { progress: next, changed: playDayChanged } = withPlayDayToday(afterResult, now);
@@ -250,7 +321,7 @@ export function recordEndlessResult(
   combo: number,
   now: Date = new Date()
 ): { newBestCorrect: boolean; newBestCombo: boolean } {
-  const current = store.read();
+  const current = storeFor(currentKey).read();
   const before = current.endless[stageId];
   const newBestCorrect = correct > 0 && (before === undefined || correct > before.correct);
   const newBestCombo = combo > 0 && (before === undefined || combo > before.combo);
@@ -272,22 +343,23 @@ export function recordEndlessResult(
 }
 
 export function toggleGarden(stageId: string, now: Date = new Date()): GardenToggle {
-  const { progress, result } = withGardenToggle(store.read(), stageId, now);
+  const { progress, result } = withGardenToggle(storeFor(currentKey).read(), stageId, now);
   if (result !== "full") save(progress);
   return result;
 }
 
 export function rememberLastMode(mode: ModeId, now: Date = new Date()): void {
-  const current = store.read();
+  const current = storeFor(currentKey).read();
   if (current.lastModeId !== mode) save({ ...current, lastModeId: mode, lastModeAt: now.toISOString() });
 }
 
 export function markTitleSeen(): void {
-  const current = store.read();
+  const current = storeFor(currentKey).read();
   if (!current.titleSeen) save({ ...current, titleSeen: true });
 }
 
 export function resetProgress(): void {
-  store.remove();
+  storeFor(currentKey).remove();
   removeLegacyKeys();
+  dispatchProgressChanged();
 }
