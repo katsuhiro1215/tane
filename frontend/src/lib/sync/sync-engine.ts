@@ -2,7 +2,7 @@ import { ApiError, type Api } from "@/lib/account/api";
 import { readProgress, setProgressOwner, writeProgress } from "@/lib/progress-store";
 import { fromSynced, mergeProgress, toSynced } from "@/lib/sync/progress-merge";
 
-const PENDING_KEY = "tane:sync:v1";
+export const PENDING_KEY = "tane:sync:v1";
 const NOTIFY_DELAY_MS = 2000;
 
 function readPending(): number[] {

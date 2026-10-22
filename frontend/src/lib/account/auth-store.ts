@@ -13,6 +13,8 @@ export type AuthState = {
   token: string;
   user: AuthUser;
   profileId: number | null;
+  /** 選んでいる子の名前（ホームのチップ表示用。profileId と一緒に入れる） */
+  profileName: string | null;
 } | null;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -39,7 +41,13 @@ export function parseAuth(raw: string | null): AuthState {
   const user = parseUser(data.user);
   if (!user) return null;
   if (data.profileId !== null && typeof data.profileId !== "number") return null;
-  return { token: data.token, user, profileId: data.profileId === null ? null : data.profileId };
+  if (data.profileName !== undefined && data.profileName !== null && typeof data.profileName !== "string") return null;
+  return {
+    token: data.token,
+    user,
+    profileId: data.profileId === null ? null : data.profileId,
+    profileName: typeof data.profileName === "string" ? data.profileName : null,
+  };
 }
 
 const store = createLocalStore<AuthState>(AUTH_KEY, parseAuth, null);

@@ -1,5 +1,6 @@
 "use client";
 
+import { AccountChip } from "@/components/account/account-chip";
 import { BottomNav } from "@/components/app/bottom-nav";
 import { ContinueButton } from "@/components/home/continue-button";
 import { Garden } from "@/components/home/garden";
@@ -13,6 +14,7 @@ export function HomeScreen() {
   if (!titleSeen) return <TitleScreen />;
   return (
     <main className="flex flex-1 flex-col pb-24">
+      <AccountChip />
       <HomeHud stars={stars} />
       <Garden stars={stars} chosen={garden} />
       <div className="px-4">

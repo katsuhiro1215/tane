@@ -7,9 +7,15 @@ import { BottomNav } from "@/components/app/bottom-nav";
 import { AppButton } from "@/components/app/button";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { Panel } from "@/components/app/panel";
+import { createApi } from "@/lib/account/api";
+import { useAuth } from "@/lib/account/auth-store";
+import { loginEnabled } from "@/lib/account/flags";
+import { logoutTane } from "@/lib/account/logout";
 import { resetProgress } from "@/lib/progress-store";
 import { updateSettings, useSettings } from "@/lib/settings-store";
 import { cn } from "@/lib/utils";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_SPRA_API_URL ?? "https://api.go.spra.jp";
 
 function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
@@ -37,8 +43,17 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
 export function SettingsScreen() {
   const router = useRouter();
   const { se, bgm } = useSettings();
+  const auth = useAuth();
   const [confirming, setConfirming] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const closeDialog = useCallback(() => setConfirming(false), []);
+
+  async function onLogout() {
+    setLoggingOut(true);
+    const api = createApi({ fetch: window.fetch.bind(window), baseUrl: API_BASE_URL, getToken: () => auth?.token ?? null });
+    await logoutTane(api);
+    router.push("/");
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 pt-4 pb-24">
@@ -47,6 +62,23 @@ export function SettingsScreen() {
         <ToggleRow label="こうかおん" checked={se} onChange={(value) => updateSettings({ se: value })} />
         <ToggleRow label="BGM" checked={bgm} onChange={(value) => updateSettings({ bgm: value })} />
       </Panel>
+      {loginEnabled() && (
+        <Panel className="flex flex-col gap-3">
+          {auth ? (
+            <>
+              <p className="font-display font-black">{auth.user.name} で ログインちゅう</p>
+              <AppButton onClick={() => router.push("/account/parent")}>ほごしゃの かたへ</AppButton>
+              <AppButton variant="warning" disabled={loggingOut} onClick={onLogout}>
+                ログアウト
+              </AppButton>
+            </>
+          ) : (
+            <AppButton variant="primary" onClick={() => router.push("/account/login")}>
+              ログイン
+            </AppButton>
+          )}
+        </Panel>
+      )}
       <Panel>
         <p className="text-sm font-bold">きろくを けすと、★と そだてた なかまが ぜんぶ なくなります。</p>
         <AppButton variant="warning" className="mt-3 w-full" onClick={() => setConfirming(true)}>

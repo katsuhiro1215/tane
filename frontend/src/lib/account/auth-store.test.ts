@@ -8,6 +8,7 @@ describe("parseAuth", () => {
       token: "abc",
       user: { id: 1, name: "たろう", email: "t@example.com", emailVerified: false },
       profileId: null,
+      profileName: null,
     };
     expect(parseAuth(JSON.stringify(state))).toEqual(state);
   });
@@ -54,6 +55,7 @@ describe("localStorage への読み書き", () => {
       token: "abc",
       user: { id: 1, name: "たろう", email: "t@example.com", emailVerified: false },
       profileId: null,
+      profileName: null,
     };
     saveAuth(state);
     expect(readAuth()).toEqual(state);
