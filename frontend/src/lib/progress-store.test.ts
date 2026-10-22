@@ -26,17 +26,18 @@ describe("parseProgress", () => {
     expect(parseProgress('"text"')).toEqual(EMPTY_PROGRESS);
   });
 
-  it("★は1〜3の整数だけ、知らないステージidは捨てる", () => {
+  it("★は1〜3の整数だけ、知らないステージidは捨てる。最大を超えるものは最大まで下げる", () => {
     const raw = JSON.stringify({ stars: { "add-1": 3, "add-2": 0, "add-3": 4, "add-4": "2", "zzz-1": 3, "flash-6": 2 }, titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 3, "flash-6": 2 }, best: {}, challengeBest: {}, endless: {}, garden: [], titleSeen: true });
+    expect(parseProgress(raw)).toEqual({
+      ...EMPTY_PROGRESS,
+      stars: { "add-1": 3, "add-3": 3, "flash-6": 2 },
+      titleSeen: true,
+    });
   });
 
   it("lastModeId は知っているあそびだけ、titleSeen は true のときだけ", () => {
     expect(parseProgress(JSON.stringify({ stars: {}, lastModeId: "mul", titleSeen: "yes" }))).toEqual({
-      stars: {},
-      best: {},
-      challengeBest: {}, endless: {},
-      garden: [],
+      ...EMPTY_PROGRESS,
       lastModeId: "mul",
       titleSeen: false,
     });
@@ -50,7 +51,20 @@ describe("parseProgress", () => {
 
   it("分割1の記録（best が無い）も★を残して読める", () => {
     const raw = JSON.stringify({ stars: { "add-1": 2 }, lastModeId: "add", titleSeen: true });
-    expect(parseProgress(raw)).toEqual({ stars: { "add-1": 2 }, best: {}, challengeBest: {}, endless: {}, garden: [], lastModeId: "add", titleSeen: true });
+    expect(parseProgress(raw)).toEqual({ ...EMPTY_PROGRESS, stars: { "add-1": 2 }, lastModeId: "add", titleSeen: true });
+  });
+
+  it("gardenChangedAt・lastModeAt は日時の文字列（壊れていれば null）、playDays は YYYY-MM-DD の重なりなし配列（直近14件）", () => {
+    const raw = JSON.stringify({
+      stars: {},
+      gardenChangedAt: "2026-10-21T10:00:00+09:00",
+      lastModeAt: "not-a-date",
+      playDays: ["2026-10-20", "2026-10-20", "2026-10-21", "bad", 123, "2026-10-22"],
+    });
+    const parsed = parseProgress(raw);
+    expect(parsed.gardenChangedAt).toBe("2026-10-21T10:00:00+09:00");
+    expect(parsed.lastModeAt).toBeNull();
+    expect(parsed.playDays).toEqual(["2026-10-20", "2026-10-21", "2026-10-22"]);
   });
 
   it("challengeBest は知っているチャレンジのあそびの、0以上の整数だけ", () => {
@@ -88,9 +102,9 @@ describe("parseProgress", () => {
 });
 
 describe("★5とエンドレスの記録", () => {
-  it("★はそのステージの最大まで。しそくえんざんは5、ほかは3", () => {
+  it("★はそのステージの最大まで下げる。しそくえんざんは5、ほかは3", () => {
     const raw = JSON.stringify({ stars: { "shisoku-1": 5, "shisoku-2": 6, "add-1": 5, "add-2": 3 } });
-    expect(parseProgress(raw).stars).toEqual({ "shisoku-1": 5, "add-2": 3 });
+    expect(parseProgress(raw).stars).toEqual({ "shisoku-1": 5, "add-1": 3, "add-2": 3 });
   });
 
   it("endless は正の整数だけ、知っているステージだけ。無い古い記録は空", () => {
@@ -171,6 +185,12 @@ describe("withGardenToggle", () => {
     expect(withGardenToggle(full, "add-9")).toEqual({ progress: full, result: "full" });
     expect(withGardenToggle(full, "add-3").result).toBe("removed");
   });
+
+  it("変えると gardenChangedAt に日時が入る", () => {
+    const now = new Date("2026-10-21T10:00:00+09:00");
+    const added = withGardenToggle(EMPTY_PROGRESS, "add-1", now);
+    expect(added.progress.gardenChangedAt).toBe(now.toISOString());
+  });
 });
 
 describe("localStorage への読み書き", () => {
@@ -222,8 +242,25 @@ describe("localStorage への読み書き", () => {
   });
 
   it("rememberLastMode", () => {
-    rememberLastMode("div");
+    const now = new Date("2026-10-21T10:00:00+09:00");
+    rememberLastMode("div", now);
     expect(readProgress().lastModeId).toBe("div");
+    expect(readProgress().lastModeAt).toBe(now.toISOString());
+  });
+
+  it("recordStageResult・recordChallengeResult・recordEndlessResult のあと、playDays に今日（日本時間）が1つだけ入る", () => {
+    const now = new Date("2026-10-21T01:00:00Z"); // JST 10:00
+    recordStageResult("add-1", 1, null, now);
+    expect(readProgress().playDays).toEqual(["2026-10-21"]);
+    // 同じ日に何度やっても増えない。前と同じ★・点数で改善が無くても、遊んだ日は残る
+    recordStageResult("add-1", 1, null, now);
+    expect(readProgress().playDays).toEqual(["2026-10-21"]);
+    const nextDay = new Date("2026-10-22T01:00:00Z");
+    recordChallengeResult("add", 100, nextDay);
+    expect(readProgress().playDays).toEqual(["2026-10-21", "2026-10-22"]);
+    const thirdDay = new Date("2026-10-23T01:00:00Z");
+    recordEndlessResult("shisoku-1", 1, 1, thirdDay);
+    expect(readProgress().playDays).toEqual(["2026-10-21", "2026-10-22", "2026-10-23"]);
   });
 
   it("resetProgress は記録を消すが、音の設定は残す", () => {

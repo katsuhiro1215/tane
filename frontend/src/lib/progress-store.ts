@@ -3,9 +3,13 @@ import { isChallengeModeId, type ChallengeModeId } from "@/lib/game/challenge-ru
 import { GARDEN_LIMIT, type StarMap } from "@/lib/game/progression";
 import type { EarnedStars, Stars } from "@/lib/game/stars";
 import { createLocalStore } from "@/lib/local-store";
+import { todayJst } from "@/lib/sync/jst-date";
 
 export const PROGRESS_KEY = "tane:progress:v1";
 export const LEGACY_KEYS = ["tane:cleared-stages"] as const;
+
+/** 送る・合わせるときの、遊んだ日の記録の目安（設計書・Spra Go 引き継ぎ文書） */
+export const MAX_PLAY_DAYS = 14;
 
 export interface EndlessBest {
   readonly correct: number;
@@ -19,11 +23,27 @@ export interface Progress {
   /** エンドレスの記録（しそくえんざん）。正解数と最長コンボを、それぞれ最高だけ残す */
   readonly endless: Readonly<Record<string, EndlessBest>>;
   readonly garden: readonly string[];
+  /** にわを最後に変えた日時（ISO 8601）。サーバーとの合わせ方で使う */
+  readonly gardenChangedAt: string | null;
   readonly lastModeId?: ModeId;
+  /** lastModeId を最後に変えた日時（ISO 8601） */
+  readonly lastModeAt: string | null;
+  /** 遊んだ日（日本時間、YYYY-MM-DD）。新しい順ではなく昇順、直近 MAX_PLAY_DAYS 日ぶん */
+  readonly playDays: readonly string[];
   readonly titleSeen: boolean;
 }
 
-export const EMPTY_PROGRESS: Progress = { stars: {}, best: {}, challengeBest: {}, endless: {}, garden: [], titleSeen: false };
+export const EMPTY_PROGRESS: Progress = {
+  stars: {},
+  best: {},
+  challengeBest: {},
+  endless: {},
+  garden: [],
+  gardenChangedAt: null,
+  lastModeAt: null,
+  playDays: [],
+  titleSeen: false,
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -41,6 +61,12 @@ function isScore(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0;
 }
 
+const PLAY_DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function isIsoDateTime(value: unknown): value is string {
+  return typeof value === "string" && value !== "" && !Number.isNaN(Date.parse(value));
+}
+
 export function parseProgress(raw: string | null): Progress {
   if (!raw) return EMPTY_PROGRESS;
   let data: unknown;
@@ -55,7 +81,8 @@ export function parseProgress(raw: string | null): Progress {
   if (isRecord(data.stars)) {
     for (const [id, value] of Object.entries(data.stars)) {
       const stage = getStage(id);
-      if (stage && isEarnedStars(value) && value <= maxStars(stage)) stars[id] = value;
+      // 最大を超える★は、捨てずに最大まで下げる（設計書5-1。あとからステージの★の最大を下げても記録が消えない）
+      if (stage && isEarnedStars(value)) stars[id] = Math.min(value, maxStars(stage)) as EarnedStars;
     }
   }
   const best: Record<string, number> = {};
@@ -85,12 +112,24 @@ export function parseProgress(raw: string | null): Progress {
     }
   }
   const lastModeId = typeof data.lastModeId === "string" && isModeId(data.lastModeId) ? data.lastModeId : undefined;
+  const gardenChangedAt = isIsoDateTime(data.gardenChangedAt) ? data.gardenChangedAt : null;
+  const lastModeAt = isIsoDateTime(data.lastModeAt) ? data.lastModeAt : null;
+  const playDaySet = new Set<string>();
+  if (Array.isArray(data.playDays)) {
+    for (const d of data.playDays) {
+      if (typeof d === "string" && PLAY_DAY_RE.test(d)) playDaySet.add(d);
+    }
+  }
+  const playDays = [...playDaySet].sort().slice(-MAX_PLAY_DAYS);
   return {
     stars,
     best,
     challengeBest,
     endless,
     garden,
+    gardenChangedAt,
+    lastModeAt,
+    playDays,
     titleSeen: data.titleSeen === true,
     ...(lastModeId ? { lastModeId } : {}),
   };
@@ -130,12 +169,31 @@ export function withChallengeScore(
 
 export type GardenToggle = "added" | "removed" | "full";
 
-export function withGardenToggle(progress: Progress, stageId: string): { progress: Progress; result: GardenToggle } {
+export function withGardenToggle(
+  progress: Progress,
+  stageId: string,
+  now: Date = new Date()
+): { progress: Progress; result: GardenToggle } {
   if (progress.garden.includes(stageId)) {
-    return { progress: { ...progress, garden: progress.garden.filter((id) => id !== stageId) }, result: "removed" };
+    return {
+      progress: { ...progress, garden: progress.garden.filter((id) => id !== stageId), gardenChangedAt: now.toISOString() },
+      result: "removed",
+    };
   }
   if (progress.garden.length >= GARDEN_LIMIT) return { progress, result: "full" };
-  return { progress: { ...progress, garden: [...progress.garden, stageId] }, result: "added" };
+  return {
+    progress: { ...progress, garden: [...progress.garden, stageId], gardenChangedAt: now.toISOString() },
+    result: "added",
+  };
+}
+
+/** 遊んだ日を足す。同じ日ならそのまま、直近 MAX_PLAY_DAYS 日ぶんだけ残す */
+function withPlayDayToday(progress: Progress, now: Date): { progress: Progress; changed: boolean } {
+  const today = todayJst(now);
+  if (progress.playDays.includes(today)) return { progress, changed: false };
+  const days = [...progress.playDays, today].sort();
+  const playDays = days.length > MAX_PLAY_DAYS ? days.slice(days.length - MAX_PLAY_DAYS) : days;
+  return { progress: { ...progress, playDays }, changed: true };
 }
 
 const store = createLocalStore(PROGRESS_KEY, parseProgress, EMPTY_PROGRESS);
@@ -161,56 +219,67 @@ export const useProgress = store.useValue;
 export function recordStageResult(
   stageId: string,
   stars: Stars,
-  score: number | null = null
+  score: number | null = null,
+  now: Date = new Date()
 ): { improved: boolean; before: Stars; newBest: boolean; bestBefore: number | null } {
   const current = store.read();
   const before: Stars = current.stars[stageId] ?? 0;
   const bestBefore = current.best[stageId] ?? null;
-  const { progress, improved, newBest } = withResult(current, stageId, stars, score);
-  if (improved || newBest) save(progress);
+  const { progress: afterResult, improved, newBest } = withResult(current, stageId, stars, score);
+  const { progress: next, changed: playDayChanged } = withPlayDayToday(afterResult, now);
+  if (improved || newBest || playDayChanged) save(next);
   return { improved, before, newBest, bestBefore };
 }
 
 export function recordChallengeResult(
   mode: ChallengeModeId,
-  score: number
+  score: number,
+  now: Date = new Date()
 ): { newBest: boolean; bestBefore: number | null } {
   const current = store.read();
   const bestBefore = current.challengeBest[mode] ?? null;
-  const { progress, newBest } = withChallengeScore(current, mode, score);
-  if (newBest) save(progress);
+  const { progress: afterResult, newBest } = withChallengeScore(current, mode, score);
+  const { progress: next, changed: playDayChanged } = withPlayDayToday(afterResult, now);
+  if (newBest || playDayChanged) save(next);
   return { newBest, bestBefore };
 }
 
 export function recordEndlessResult(
   stageId: string,
   correct: number,
-  combo: number
+  combo: number,
+  now: Date = new Date()
 ): { newBestCorrect: boolean; newBestCombo: boolean } {
   const current = store.read();
   const before = current.endless[stageId];
   const newBestCorrect = correct > 0 && (before === undefined || correct > before.correct);
   const newBestCombo = combo > 0 && (before === undefined || combo > before.combo);
+  const { progress: afterPlayDay, changed: playDayChanged } = withPlayDayToday(current, now);
   if (newBestCorrect || newBestCombo) {
     const next: EndlessBest = {
       correct: Math.max(before?.correct ?? 0, correct),
       combo: Math.max(before?.combo ?? 0, combo),
     };
     // 片方が0のままだと次の読み込みで捨てられるので、最低1にしておく
-    save({ ...current, endless: { ...current.endless, [stageId]: { correct: Math.max(1, next.correct), combo: Math.max(1, next.combo) } } });
+    save({
+      ...afterPlayDay,
+      endless: { ...current.endless, [stageId]: { correct: Math.max(1, next.correct), combo: Math.max(1, next.combo) } },
+    });
+  } else if (playDayChanged) {
+    save(afterPlayDay);
   }
   return { newBestCorrect, newBestCombo };
 }
 
-export function toggleGarden(stageId: string): GardenToggle {
-  const { progress, result } = withGardenToggle(store.read(), stageId);
+export function toggleGarden(stageId: string, now: Date = new Date()): GardenToggle {
+  const { progress, result } = withGardenToggle(store.read(), stageId, now);
   if (result !== "full") save(progress);
   return result;
 }
 
-export function rememberLastMode(mode: ModeId): void {
+export function rememberLastMode(mode: ModeId, now: Date = new Date()): void {
   const current = store.read();
-  if (current.lastModeId !== mode) save({ ...current, lastModeId: mode });
+  if (current.lastModeId !== mode) save({ ...current, lastModeId: mode, lastModeAt: now.toISOString() });
 }
 
 export function markTitleSeen(): void {
