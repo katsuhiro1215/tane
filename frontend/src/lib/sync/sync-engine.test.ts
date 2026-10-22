@@ -4,10 +4,11 @@ import { ApiError } from "@/lib/account/api";
 import {
   EMPTY_PROGRESS,
   readProgress,
+  readProgressFor,
   setProgressOwner,
   writeProgress,
 } from "@/lib/progress-store";
-import { createSyncEngine } from "@/lib/sync/sync-engine";
+import { createSyncEngine, PENDING_KEY } from "@/lib/sync/sync-engine";
 
 function fakeTimers() {
   let id = 0;
@@ -164,6 +165,93 @@ describe("createSyncEngine", () => {
     expect(readProgress()).toEqual(EMPTY_PROGRESS);
     setProgressOwner(10);
     expect(readProgress().stars).toEqual({ "add-1": 1 });
+  });
+
+  it("notifyChanged は呼んだ時点で印をつける（送る前に閉じても、次に開いたとき送り直せる）", async () => {
+    const timers = fakeTimers();
+    const putProgress = vi.fn(async () => ({ progress: fromProgress(EMPTY_PROGRESS), playDays: [] }));
+    const getProgress = vi.fn(async () => ({ progress: fromProgress(EMPTY_PROGRESS), playDays: [] }));
+    const api = { putProgress, getProgress } as never;
+    const engine = createSyncEngine({ api, now: () => new Date(), setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout });
+
+    await engine.start(50);
+    engine.notifyChanged();
+    // まだ送る前（2秒経っていない）でも、印はもう付いている
+    expect(JSON.parse(window.localStorage.getItem(PENDING_KEY)!)).toEqual([50]);
+
+    timers.advance(2000);
+    await flushMicrotasks();
+    expect(putProgress).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(window.localStorage.getItem(PENDING_KEY)!)).toEqual([]);
+  });
+
+  it("stop の後に flush・notifyChanged を呼んでも何もしない", async () => {
+    const timers = fakeTimers();
+    const putProgress = vi.fn(async () => ({ progress: fromProgress(EMPTY_PROGRESS), playDays: [] }));
+    const getProgress = vi.fn(async () => ({ progress: fromProgress(EMPTY_PROGRESS), playDays: [] }));
+    const api = { putProgress, getProgress } as never;
+    const engine = createSyncEngine({ api, now: () => new Date(), setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout });
+
+    await engine.start(51);
+    engine.stop();
+    engine.notifyChanged();
+    timers.advance(3000);
+    await flushMicrotasks();
+    await engine.flush();
+    expect(putProgress).not.toHaveBeenCalled();
+  });
+
+  it("送信中に持ち主（今の画面）が別の子に切り替わっても、送った本人のキーだけに書く", async () => {
+    setProgressOwner(20);
+    writeProgress({ ...EMPTY_PROGRESS, stars: { "add-1": 1 } });
+    setProgressOwner(21);
+    writeProgress({ ...EMPTY_PROGRESS, stars: { "add-9": 2 } });
+    setProgressOwner(20);
+
+    let resolvePut!: (value: { progress: ReturnType<typeof fromProgress>; playDays: string[] }) => void;
+    const putProgress = vi.fn(
+      () =>
+        new Promise<{ progress: ReturnType<typeof fromProgress>; playDays: string[] }>((resolve) => {
+          resolvePut = resolve;
+        })
+    );
+    const getProgress = vi.fn(async () => ({ progress: fromProgress(EMPTY_PROGRESS), playDays: [] }));
+    const api = { putProgress, getProgress } as never;
+    const engine = createSyncEngine({ api, now: () => new Date(), setTimeout, clearTimeout });
+
+    await engine.start(20);
+    const flushPromise = engine.flush();
+
+    // 送信中に、別の子（21）へ切り替わる
+    setProgressOwner(21);
+
+    resolvePut({ progress: fromProgress({ ...EMPTY_PROGRESS, stars: { "add-1": 1 } }), playDays: [] });
+    await flushPromise;
+
+    expect(readProgressFor(21).stars).toEqual({ "add-9": 2 });
+    expect(readProgressFor(20).stars).toEqual({ "add-1": 1 });
+  });
+
+  it("取得中に別の子を選び直しても、前の子の結果が今の子のキーに入らない", async () => {
+    let resolveGetA!: (value: { progress: ReturnType<typeof fromProgress>; playDays: string[] }) => void;
+    const getProgress = vi.fn((id: number) => {
+      if (id === 30) {
+        return new Promise<{ progress: ReturnType<typeof fromProgress>; playDays: string[] }>((resolve) => {
+          resolveGetA = resolve;
+        });
+      }
+      return Promise.resolve({ progress: fromProgress(EMPTY_PROGRESS), playDays: [] });
+    });
+    const api = { getProgress, putProgress: vi.fn() } as never;
+    const engine = createSyncEngine({ api, now: () => new Date(), setTimeout, clearTimeout });
+
+    const startA = engine.start(30);
+    await engine.start(31);
+
+    resolveGetA({ progress: fromProgress({ ...EMPTY_PROGRESS, stars: { "add-9": 3 } }), playDays: [] });
+    await startA;
+
+    expect(readProgressFor(31).stars).toEqual({});
   });
 });
 

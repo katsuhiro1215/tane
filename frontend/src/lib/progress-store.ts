@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 
+import { AUTH_KEY } from "@/lib/account/auth-store";
 import { getStage, isModeId, maxStars, type ModeId } from "@/data/stages/catalog";
 import { isChallengeModeId, type ChallengeModeId } from "@/lib/game/challenge-rules";
 import { GARDEN_LIMIT, type StarMap } from "@/lib/game/progression";
@@ -214,8 +215,24 @@ function storeFor(key: string) {
   return s;
 }
 
-// 今、画面が読み書きしている先（既定はゲスト）。ログインして子を選ぶと setProgressOwner で切り替わる
-let currentKey = PROGRESS_KEY;
+/**
+ * ログイン中なら、保存ずみのプロフィールのキーから始める（モジュール読み込み時の1回だけ）。
+ * これをしないと、再読み込みの最初の一瞬だけゲストの記録が出てしまう
+ */
+function initialOwnerKey(): string {
+  if (typeof window === "undefined") return PROGRESS_KEY;
+  try {
+    const raw = window.localStorage.getItem(AUTH_KEY);
+    if (!raw) return PROGRESS_KEY;
+    const data = JSON.parse(raw) as { profileId?: unknown };
+    return typeof data.profileId === "number" ? progressKeyFor(data.profileId) : PROGRESS_KEY;
+  } catch {
+    return PROGRESS_KEY;
+  }
+}
+
+// 今、画面が読み書きしている先。ログインして子を選ぶと setProgressOwner で切り替わる
+let currentKey = initialOwnerKey();
 // useSyncExternalStore 用の、持ち主の切り替え・値の変化をまとめて知らせるイベント（local-store.ts の per-key イベントとは別）
 const PROGRESS_CHANGED_EVENT = "tane:progress-changed";
 
@@ -285,6 +302,37 @@ export function readGuestProgress(): Progress {
 export function clearGuestProgress(): void {
   storeFor(PROGRESS_KEY).remove();
   if (currentKey === PROGRESS_KEY) dispatchProgressChanged();
+}
+
+/**
+ * 指定したプロフィールの記録を、今の持ち主に関係なく読み書きする（同期エンジン用）。
+ * 持ち主が送信中に切り替わっても、ここで指定した相手のキーだけを読み書きするので、
+ * 別の子・ゲストの記録と混ざらない
+ */
+export function readProgressFor(profileId: number): Progress {
+  return storeFor(progressKeyFor(profileId)).read();
+}
+
+export function writeProgressFor(profileId: number, next: Progress): void {
+  storeFor(progressKeyFor(profileId)).write(next);
+  if (currentKey === progressKeyFor(profileId)) dispatchProgressChanged();
+}
+
+/** この端末にある、プロフィールごとの記録をすべて消す（ログアウト。設計書6-5。ゲストの記録は残す） */
+export function clearAllProfileProgress(): void {
+  if (typeof window === "undefined") return;
+  const prefix = `${PROGRESS_KEY}:p`;
+  const keys: string[] = [];
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith(prefix)) keys.push(key);
+    }
+    for (const key of keys) window.localStorage.removeItem(key);
+  } catch {
+    // 消せなくても遊ぶのに困らない
+  }
+  if (currentKey.startsWith(prefix)) dispatchProgressChanged();
 }
 
 export function recordStageResult(

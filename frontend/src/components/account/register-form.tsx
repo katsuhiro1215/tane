@@ -29,7 +29,11 @@ export function RegisterForm() {
     const api = createApi({ fetch: window.fetch.bind(window), baseUrl: API_BASE_URL, getToken: () => null });
     api
       .registration()
-      .then(setRegistration)
+      .then((data) => {
+        setRegistration(data);
+        // おやすみ中は、フォームを出さずにお知らせだけにする（計画Task4）
+        if (!data.open) setDisabled(true);
+      })
       .catch((e) => {
         if (e instanceof ApiError && e.status === 403) setDisabled(true);
       });

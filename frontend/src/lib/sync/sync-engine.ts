@@ -1,5 +1,5 @@
 import { ApiError, type Api } from "@/lib/account/api";
-import { readProgress, setProgressOwner, writeProgress } from "@/lib/progress-store";
+import { readProgressFor, setProgressOwner, writeProgressFor } from "@/lib/progress-store";
 import { fromSynced, mergeProgress, toSynced } from "@/lib/sync/progress-merge";
 
 export const PENDING_KEY = "tane:sync:v1";
@@ -59,16 +59,18 @@ export function createSyncEngine(deps: SyncEngineDeps) {
     cancelTimer();
     const profileId = currentProfileId;
     if (profileId === null) return;
-    const local = readProgress();
+    // profileId を捕まえておき、以後はずっとこの子のキーだけを読み書きする。
+    // 送信中に画面の持ち主（currentProfileId）が別の子へ切り替わっても、ここでは混ざらない
+    const local = readProgressFor(profileId);
     try {
       const response = await deps.api.putProgress(profileId, {
         progress: toSynced(local),
         playDays: [...local.playDays],
       });
-      // 送っている間にも遊べるので、今の端末の記録と、サーバーが返した（合わせ済みの）記録をもう一度合わせる
-      const afterSend = readProgress();
+      // 送っている間にも遊べるので、この子の今の記録と、サーバーが返した（合わせ済みの）記録をもう一度合わせる
+      const afterSend = readProgressFor(profileId);
       const merged = mergeProgress(toSynced(afterSend), response.progress);
-      writeProgress(fromSynced(merged, afterSend));
+      writeProgressFor(profileId, fromSynced(merged, afterSend));
       clearPending(profileId);
     } catch (e) {
       if (e instanceof ApiError) {
@@ -88,6 +90,8 @@ export function createSyncEngine(deps: SyncEngineDeps) {
 
   function notifyChanged(): void {
     if (currentProfileId === null) return;
+    // 先に印を付ける。送る前・送信中に閉じても、次に開いたときに送り直せる
+    markPending(currentProfileId);
     cancelTimer();
     timer = deps.setTimeout(() => {
       timer = null;
@@ -99,11 +103,13 @@ export function createSyncEngine(deps: SyncEngineDeps) {
     cancelTimer();
     currentProfileId = profileId;
     setProgressOwner(profileId);
-    const local = readProgress();
+    const local = readProgressFor(profileId);
     try {
       const response = await deps.api.getProgress(profileId);
+      // 取得中に別の子へ切り替わっていたら、この遅れた応答は捨てる（どちらのキーにも書かない）
+      if (currentProfileId !== profileId) return;
       const merged = mergeProgress(toSynced(local), response.progress);
-      writeProgress(fromSynced(merged, local));
+      writeProgressFor(profileId, fromSynced(merged, local));
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 401) {
@@ -117,7 +123,7 @@ export function createSyncEngine(deps: SyncEngineDeps) {
       }
       // つながらなくても、端末の記録のまま遊び続けられる
     }
-    if (readPending().includes(profileId)) await flush();
+    if (currentProfileId === profileId && readPending().includes(profileId)) await flush();
   }
 
   function stop(): void {

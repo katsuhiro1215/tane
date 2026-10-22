@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  clearAllProfileProgress,
   clearGuestProgress,
   EMPTY_PROGRESS,
   markTitleSeen,
@@ -9,6 +10,7 @@ import {
   progressKeyFor,
   readGuestProgress,
   readProgress,
+  readProgressFor,
   recordChallengeResult,
   recordEndlessResult,
   recordStageResult,
@@ -20,6 +22,7 @@ import {
   withGardenToggle,
   withResult,
   writeProgress,
+  writeProgressFor,
 } from "@/lib/progress-store";
 import { SETTINGS_KEY } from "@/lib/settings-store";
 
@@ -315,6 +318,10 @@ describe("プロフィールごとの記録の持ち主（progressKeyFor / setPr
         getItem: (key: string) => store.get(key) ?? null,
         setItem: (key: string, value: string) => void store.set(key, value),
         removeItem: (key: string) => void store.delete(key),
+        get length() {
+          return store.size;
+        },
+        key: (index: number) => [...store.keys()][index] ?? null,
       },
       addEventListener: () => {},
       removeEventListener: () => {},
@@ -364,5 +371,29 @@ describe("プロフィールごとの記録の持ち主（progressKeyFor / setPr
     expect(readGuestProgress()).toEqual(EMPTY_PROGRESS);
     // 持ち主（プロフィール9）の記録には影響しない
     expect(readProgress()).toEqual(EMPTY_PROGRESS);
+  });
+
+  it("readProgressFor・writeProgressFor は、今の持ち主に関係なく、指定したプロフィールのキーだけを読み書きする", () => {
+    setProgressOwner(5);
+    recordStageResult("add-1", 1); // 今の持ち主（5）に書く
+
+    writeProgressFor(11, { ...EMPTY_PROGRESS, stars: { "add-2": 2 } });
+    // 持ち主（5）には影響しない
+    expect(readProgress().stars).toEqual({ "add-1": 1 });
+    // 11番の記録は、持ち主を切り替えなくても読める
+    expect(readProgressFor(11).stars).toEqual({ "add-2": 2 });
+    expect(readProgressFor(5).stars).toEqual({ "add-1": 1 });
+  });
+
+  it("clearAllProfileProgress は、この端末にあるプロフィールごとの記録をすべて消す（ゲストは残す）", () => {
+    recordStageResult("add-1", 1); // ゲスト
+    writeProgressFor(3, { ...EMPTY_PROGRESS, stars: { "add-2": 2 } });
+    writeProgressFor(4, { ...EMPTY_PROGRESS, stars: { "add-3": 3 } });
+
+    clearAllProfileProgress();
+
+    expect(readProgressFor(3)).toEqual(EMPTY_PROGRESS);
+    expect(readProgressFor(4)).toEqual(EMPTY_PROGRESS);
+    expect(readGuestProgress().stars).toEqual({ "add-1": 1 });
   });
 });
