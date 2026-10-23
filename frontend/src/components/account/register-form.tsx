@@ -58,7 +58,7 @@ export function RegisterForm() {
         deviceName()
       );
       saveAuth({ token: result.token, user: result.user, profileId: null, profileName: null });
-      router.push("/account/profiles");
+      router.push(result.user.termsOutdated ? "/account/terms-consent" : "/account/profiles");
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 403) {
@@ -131,14 +131,14 @@ export function RegisterForm() {
         <label className="flex items-center gap-2 font-display text-sm font-black">
           <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} required />
           <span>
-            <a href="https://spra.jp/terms" target="_blank" rel="noreferrer" className="underline">
-              りようきやく
+            <a href="https://go.spra.jp/terms" target="_blank" rel="noreferrer" className="underline">
+              利用規約
             </a>
-            ・
-            <a href="https://spra.jp/privacy" target="_blank" rel="noreferrer" className="underline">
+            と
+            <a href="https://go.spra.jp/privacy" target="_blank" rel="noreferrer" className="underline">
               プライバシーポリシー
             </a>
-            に どうい する
+            に同意します
           </span>
         </label>
         {message && <p className="text-sm font-bold text-destructive">{message}</p>}

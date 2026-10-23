@@ -32,7 +32,7 @@ export function LoginForm() {
       const api = createApi({ fetch: window.fetch.bind(window), baseUrl: API_BASE_URL, getToken: () => null });
       const result = await api.login(email, password, deviceName());
       saveAuth({ token: result.token, user: result.user, profileId: null, profileName: null });
-      router.push("/account/profiles");
+      router.push(result.user.termsOutdated ? "/account/terms-consent" : "/account/profiles");
     } catch (e) {
       if (e instanceof ApiError) {
         if (e.status === 403) {
