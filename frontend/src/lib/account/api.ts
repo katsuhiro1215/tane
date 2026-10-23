@@ -3,12 +3,14 @@ import type { SyncedProgress } from "@/lib/sync/progress-merge";
 export class ApiError extends Error {
   status: number;
   errors?: Record<string, string[]>;
+  code?: string;
 
-  constructor(status: number, message: string, errors?: Record<string, string[]>) {
+  constructor(status: number, message: string, errors?: Record<string, string[]>, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.errors = errors;
+    this.code = code;
   }
 }
 
@@ -17,6 +19,13 @@ export interface AuthUserPayload {
   name: string;
   email: string;
   emailVerified: boolean;
+  /** 同意が古い（新しい版の利用規約・プライバシーポリシーへ同意しなおしていない） */
+  termsOutdated: boolean;
+}
+
+export interface CurrentUser extends AuthUserPayload {
+  /** 現在の版（POST /api/terms/accept に送る値） */
+  termsVersionCurrent: string;
 }
 
 export interface LoginResult {
@@ -81,6 +90,7 @@ function mapUser(data: unknown): AuthUserPayload {
     name: data.name as string,
     email: data.email as string,
     emailVerified: data.email_verified === true,
+    termsOutdated: data.terms_outdated === true,
   };
 }
 
@@ -111,12 +121,13 @@ export function createApi(deps: ApiDeps) {
     if (!res.ok) {
       const errors = isRecord(data) && isRecord(data.errors) ? (data.errors as Record<string, string[]>) : undefined;
       const serverMessage = isRecord(data) && typeof data.message === "string" ? data.message : null;
+      const code = isRecord(data) && typeof data.code === "string" ? data.code : undefined;
       const message =
         (errors && firstErrorMessage(errors)) ??
         serverMessage ??
         STATUS_FALLBACK[res.status] ??
         "つうしんに しっぱいしました";
-      throw new ApiError(res.status, message, errors);
+      throw new ApiError(res.status, message, errors, code);
     }
     return data as T;
   }
@@ -148,6 +159,17 @@ export function createApi(deps: ApiDeps) {
 
     async logout(): Promise<null> {
       return request<null>("/api/auth/token", { method: "DELETE" });
+    },
+
+    async getUser(): Promise<CurrentUser> {
+      const data = await request<unknown>("/api/user");
+      const user = mapUser(data);
+      const termsVersionCurrent = isRecord(data) && typeof data.terms_version_current === "string" ? data.terms_version_current : "";
+      return { ...user, termsVersionCurrent };
+    },
+
+    async acceptTerms(version: string): Promise<null> {
+      return request<null>("/api/terms/accept", { method: "POST", body: JSON.stringify({ version }) });
     },
 
     async registration(): Promise<Registration> {

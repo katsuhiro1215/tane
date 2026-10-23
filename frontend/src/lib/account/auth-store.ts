@@ -7,6 +7,8 @@ export interface AuthUser {
   name: string;
   email: string;
   emailVerified: boolean;
+  /** 同意が古い（既定 false。無ければ false として読む） */
+  termsOutdated: boolean;
 }
 
 export type AuthState = {
@@ -25,7 +27,13 @@ function parseUser(value: unknown): AuthUser | null {
   if (!isRecord(value)) return null;
   if (typeof value.id !== "number" || typeof value.name !== "string" || typeof value.email !== "string") return null;
   if (typeof value.emailVerified !== "boolean") return null;
-  return { id: value.id, name: value.name, email: value.email, emailVerified: value.emailVerified };
+  return {
+    id: value.id,
+    name: value.name,
+    email: value.email,
+    emailVerified: value.emailVerified,
+    termsOutdated: value.termsOutdated === true,
+  };
 }
 
 export function parseAuth(raw: string | null): AuthState {

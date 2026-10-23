@@ -6,7 +6,7 @@ import { EMPTY_PROGRESS, readProgressFor, setProgressOwner, writeProgressFor } f
 import { PENDING_KEY } from "@/lib/sync/sync-engine";
 import { toSynced } from "@/lib/sync/progress-merge";
 
-const USER = { id: 1, name: "たろう", email: "t@example.com", emailVerified: false };
+const USER = { id: 1, name: "たろう", email: "t@example.com", emailVerified: false, termsOutdated: false };
 const EMPTY_RESPONSE = { progress: toSynced(EMPTY_PROGRESS), playDays: [] };
 
 function stubLocalStorage() {

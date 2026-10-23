@@ -49,6 +49,18 @@ describe("createApi エラー", () => {
     }
   });
 
+  it("403 で code があれば ApiError.code に入る", async () => {
+    const fetchMock = fakeFetch(403, { message: "だめだよ", code: "terms_outdated" });
+    const api = makeApi(fetchMock);
+    await expect(api.registration()).rejects.toMatchObject({ status: 403, code: "terms_outdated" });
+  });
+
+  it("code が無いときは ApiError.code は undefined", async () => {
+    const fetchMock = fakeFetch(403, { message: "だめだよ" });
+    const api = makeApi(fetchMock);
+    await expect(api.registration()).rejects.toMatchObject({ status: 403, code: undefined });
+  });
+
   it("422 は message と errors をそのまま持つ", async () => {
     const fetchMock = fakeFetch(422, { message: "招待コードが違います", errors: { invite_code: ["招待コードが違います"] } });
     const api = makeApi(fetchMock);
@@ -79,7 +91,10 @@ describe("createApi 呼び出しの形", () => {
     const [url, init] = (fetchMock as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("http://localhost/api/auth/token");
     expect(JSON.parse(init.body as string)).toEqual({ email: "t@e.c", password: "password1", device_name: "iPhone" });
-    expect(result).toEqual({ token: "abc", user: { id: 1, name: "たろう", email: "t@e.c", emailVerified: true } });
+    expect(result).toEqual({
+      token: "abc",
+      user: { id: 1, name: "たろう", email: "t@e.c", emailVerified: true, termsOutdated: false },
+    });
   });
 
   it("putProgress は progress と playDays を送る", async () => {
@@ -90,5 +105,60 @@ describe("createApi 呼び出しの形", () => {
     expect(url).toBe("http://localhost/api/tane/profiles/3/progress");
     expect(init.method).toBe("PUT");
     expect(JSON.parse(init.body as string)).toEqual({ progress: { stars: {} }, playDays: ["2026-10-21"] });
+  });
+});
+
+describe("createApi 同意のしなおし", () => {
+  it("login は terms_outdated を termsOutdated に変換する（既定 false）", async () => {
+    const withFlag = fakeFetch(201, {
+      token: "a",
+      user: { id: 1, name: "a", email: "a@b.c", email_verified: true, terms_outdated: true },
+    });
+    const api1 = makeApi(withFlag);
+    expect((await api1.login("a@b.c", "pw123456", "d")).user.termsOutdated).toBe(true);
+
+    const without = fakeFetch(201, { token: "a", user: { id: 1, name: "a", email: "a@b.c", email_verified: true } });
+    const api2 = makeApi(without);
+    expect((await api2.login("a@b.c", "pw123456", "d")).user.termsOutdated).toBe(false);
+  });
+
+  it("getUser は /api/user を GET し、termsVersionCurrent を含む", async () => {
+    const fetchMock = fakeFetch(200, {
+      id: 1,
+      name: "a",
+      email: "a@b.c",
+      email_verified: true,
+      terms_outdated: true,
+      terms_version_current: "2026-11-01",
+    });
+    const api = makeApi(fetchMock, "tok");
+    const user = await api.getUser();
+    const [url, init] = (fetchMock as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe("http://localhost/api/user");
+    expect(init.method ?? "GET").toBe("GET");
+    expect(user).toMatchObject({ id: 1, termsOutdated: true, termsVersionCurrent: "2026-11-01" });
+  });
+
+  it("getUser は terms_version_current が無ければ空文字にする", async () => {
+    const fetchMock = fakeFetch(200, { id: 1, name: "a", email: "a@b.c", email_verified: true });
+    const api = makeApi(fetchMock, "tok");
+    const user = await api.getUser();
+    expect(user.termsVersionCurrent).toBe("");
+  });
+
+  it("acceptTerms は version を送り、204 で null を返す", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      status: 204,
+      json: async () => {
+        throw new Error("no body");
+      },
+      headers: new Headers(),
+    })) as unknown as typeof fetch;
+    const api = makeApi(fetchMock, "tok");
+    await expect(api.acceptTerms("2026-11-01")).resolves.toBeNull();
+    const [url, init] = (fetchMock as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe("http://localhost/api/terms/accept");
+    expect(JSON.parse(init.body as string)).toEqual({ version: "2026-11-01" });
   });
 });

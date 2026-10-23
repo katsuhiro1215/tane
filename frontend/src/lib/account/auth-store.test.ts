@@ -6,7 +6,7 @@ describe("parseAuth", () => {
   it("形が正しければそのまま読める", () => {
     const state: AuthState = {
       token: "abc",
-      user: { id: 1, name: "たろう", email: "t@example.com", emailVerified: false },
+      user: { id: 1, name: "たろう", email: "t@example.com", emailVerified: false, termsOutdated: false },
       profileId: null,
       profileName: null,
     };
@@ -25,6 +25,17 @@ describe("parseAuth", () => {
     const base = { token: "abc", user: { id: 1, name: "a", email: "a@b.c", emailVerified: true } };
     expect(parseAuth(JSON.stringify({ ...base, profileId: 5 }))?.profileId).toBe(5);
     expect(parseAuth(JSON.stringify({ ...base, profileId: "5" }))).toBeNull();
+  });
+
+  it("termsOutdated を保存・復元できる（無ければ既定 false）", () => {
+    const base = { token: "abc", profileId: null, profileName: null };
+    const withFlag = parseAuth(
+      JSON.stringify({ ...base, user: { id: 1, name: "a", email: "a@b.c", emailVerified: true, termsOutdated: true } })
+    );
+    expect(withFlag?.user.termsOutdated).toBe(true);
+
+    const without = parseAuth(JSON.stringify({ ...base, user: { id: 1, name: "a", email: "a@b.c", emailVerified: true } }));
+    expect(without?.user.termsOutdated).toBe(false);
   });
 });
 
@@ -53,7 +64,7 @@ describe("localStorage への読み書き", () => {
     expect(readAuth()).toBeNull();
     const state: AuthState = {
       token: "abc",
-      user: { id: 1, name: "たろう", email: "t@example.com", emailVerified: false },
+      user: { id: 1, name: "たろう", email: "t@example.com", emailVerified: false, termsOutdated: false },
       profileId: null,
       profileName: null,
     };
