@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AppButton } from "@/components/app/button";
 import { Panel } from "@/components/app/panel";
 import { ApiError, createApi } from "@/lib/account/api";
-import { readAuth } from "@/lib/account/auth-store";
+import { readAuth, saveAuth } from "@/lib/account/auth-store";
 import { logoutTane } from "@/lib/account/logout";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_SPRA_API_URL ?? "https://api.go.spra.jp";
@@ -29,8 +30,8 @@ export function TermsConsentScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [loggedOut, setLoggedOut] = useState(false);
 
-  useEffect(() => {
-    api()
+  function loadVersion() {
+    return api()
       .getUser()
       .then((user) => setVersion(user.termsVersionCurrent))
       .catch((e) => {
@@ -40,6 +41,11 @@ export function TermsConsentScreen() {
         }
         setMessage(e instanceof ApiError ? e.message : "つうしんに しっぱいしました");
       });
+  }
+
+  useEffect(() => {
+    void loadVersion();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   async function onAccept() {
@@ -48,11 +54,15 @@ export function TermsConsentScreen() {
     setMessage(null);
     try {
       await api().acceptTerms(version);
+      const auth = readAuth();
+      if (auth) saveAuth({ ...auth, user: { ...auth.user, termsOutdated: false } });
       window.dispatchEvent(new Event("tane:terms-accepted"));
       router.push("/account/profiles");
     } catch (e) {
       if (e instanceof ApiError && e.status === 422) {
-        setMessage("きまりが さらに かわったみたい。もう一度、この画面を ひらきなおしてね。");
+        setMessage("きまりが さらに かわったみたい。いまの きまりを もう一度 よみこむよ。");
+        setVersion(null);
+        void loadVersion();
       } else {
         setMessage(e instanceof ApiError ? e.message : "つうしんに しっぱいしました");
       }
@@ -62,6 +72,7 @@ export function TermsConsentScreen() {
   }
 
   async function onDecline() {
+    if (!window.confirm("どういしないと ログアウトします。おくっていない きろくは きえます。よろしいですか？")) return;
     setSubmitting(true);
     try {
       await logoutTane(api());
@@ -80,6 +91,9 @@ export function TermsConsentScreen() {
             アカウントの さくじょは、info@spra.jp へ れんらくしてください。
           </p>
         </Panel>
+        <Link href="/account/login" className="text-center text-sm font-bold underline">
+          ログイン画面へ もどる
+        </Link>
       </main>
     );
   }

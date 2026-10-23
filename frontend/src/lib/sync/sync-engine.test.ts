@@ -159,6 +159,19 @@ describe("createSyncEngine", () => {
     expect(JSON.parse(store.get(PENDING_KEY) ?? "[]")).toContain(5);
   });
 
+  it("start で 403 + code=terms_outdated を受けても、onTermsOutdated が呼ばれ、onProfileGone は呼ばれない", async () => {
+    const onProfileGone = vi.fn();
+    const onTermsOutdated = vi.fn();
+    const getProgress = vi.fn(async () => {
+      throw new ApiError(403, "だめ", undefined, "terms_outdated");
+    });
+    const api = { getProgress, putProgress: vi.fn() } as never;
+    const engine = createSyncEngine({ api, now: () => new Date(), setTimeout, clearTimeout, onProfileGone, onTermsOutdated });
+    await engine.start(7);
+    expect(onTermsOutdated).toHaveBeenCalledTimes(1);
+    expect(onProfileGone).not.toHaveBeenCalled();
+  });
+
   it("429 では印が残り、flush をもう一度呼ぶまで自動では送り直さない", async () => {
     const putProgress = vi.fn(async () => {
       throw new ApiError(429, "まってね");
