@@ -49,9 +49,26 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
         dropProfile();
         router.push("/account/profiles");
       },
+      // 403 + code: terms_outdated：同意が古い。プロフィール・未送信の記録は残し、同意画面へ送る
+      onTermsOutdated: () => {
+        engineRef.current?.stop();
+        router.push("/account/terms-consent");
+      },
     });
     return () => engineRef.current?.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // 同意画面で「どういする」を終えたら、送信を止めていたこのプロフィールの同期を再開する
+    const onTermsAccepted = () => {
+      const current = readAuth();
+      if (current?.profileId !== null && current?.profileId !== undefined) {
+        void engineRef.current?.start(current.profileId);
+      }
+    };
+    window.addEventListener("tane:terms-accepted", onTermsAccepted);
+    return () => window.removeEventListener("tane:terms-accepted", onTermsAccepted);
   }, []);
 
   useEffect(() => {
