@@ -283,8 +283,8 @@ export function SeedPlayer({ stageId }: { stageId: string }) {
         <ScoreCounter score={speed.session.score} />
       </div>
       {inFever && <FeverFriends hopKey={speed.session.answered} />}
-      <Panel className={cn("relative mx-4 flex items-center justify-center gap-3 px-3 py-1.5", shaking && "animate-shake")}>
-        <Image src={SPRU_POSES[shaking ? "sad" : "think"]} alt="" width={48} height={60} className="h-10 w-auto" />
+      <Panel className={cn("relative mx-4 flex items-center justify-center gap-3 px-3 py-1", shaking && "animate-shake")}>
+        <Image src={SPRU_POSES[shaking ? "sad" : "think"]} alt="" width={48} height={60} className="h-9 w-auto" />
         <ComboText combo={speed.session.combo} />
         <p className="min-w-24 rounded-2xl bg-muted/60 px-4 py-0.5 text-center font-display text-3xl font-black tabular-nums">
           {inputValue || " "}
@@ -306,6 +306,7 @@ export function SeedPlayer({ stageId }: { stageId: string }) {
           onSubmit={submitInput}
           disabled={!playing}
           maxLength={3}
+          size="md"
         />
       </div>
       <FeverBanner show={speed.banner} />

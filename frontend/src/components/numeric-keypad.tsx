@@ -12,11 +12,13 @@ interface NumericKeypadProps {
   disabled?: boolean;
   /** 打てる桁数。省略は4けた */
   maxLength?: number;
+  /** キーの大きさ。省略は lg（通常の練習画面）。種が降ってくる画面など、上の表示に高さを譲りたいときは md */
+  size?: "md" | "lg";
 }
 
 const DIGIT_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK"];
 
-export function NumericKeypad({ value, onChange, onSubmit, disabled, maxLength }: NumericKeypadProps) {
+export function NumericKeypad({ value, onChange, onSubmit, disabled, maxLength, size = "lg" }: NumericKeypadProps) {
   const { play } = useSound();
   function handleKeyPress(key: string) {
     if (disabled) {
@@ -45,7 +47,7 @@ export function NumericKeypad({ value, onChange, onSubmit, disabled, maxLength }
           type="button"
           onClick={() => handleKeyPress(key)}
           disabled={disabled || (key === "OK" && !canSubmit(value))}
-          className={cn(appButtonVariants({ variant: key === "OK" ? "cta" : "cream", size: "lg" }), "w-full")}
+          className={cn(appButtonVariants({ variant: key === "OK" ? "cta" : "cream", size }), "w-full")}
         >
           {key}
         </button>
