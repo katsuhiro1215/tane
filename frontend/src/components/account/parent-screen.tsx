@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
 
 import { AppButton } from "@/components/app/button";
@@ -21,6 +22,7 @@ function api() {
 }
 
 export function ParentScreen() {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,13 +33,17 @@ export function ParentScreen() {
       const result = await api().parentRecords();
       setRecords(result);
     } catch (e) {
+      if (e instanceof ApiError && e.code === "terms_outdated") {
+        router.push("/account/terms-consent");
+        return;
+      }
       // 15分を過ぎて確認が切れた（403）など。パスワードの入力に戻す
       setRecords(null);
       if (!(e instanceof ApiError && e.status === 403)) {
         setError(e instanceof ApiError ? e.message : "つうしんに しっぱいしました");
       }
     }
-  }, []);
+  }, [router]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

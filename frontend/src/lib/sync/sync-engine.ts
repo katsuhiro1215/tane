@@ -40,8 +40,10 @@ export interface SyncEngineDeps {
   clearTimeout: (handle: ReturnType<typeof setTimeout>) => void;
   /** 401：トークンが切れた。端末の記録は残したまま、ログインへ案内する */
   onUnauthorized?: () => void;
-  /** 403／404：このプロフィールが自分の家族でない・消えた。「だれがあそぶ？」へ戻す */
+  /** 403／404（code が terms_outdated 以外）：このプロフィールが自分の家族でない・消えた。「だれがあそぶ？」へ戻す */
   onProfileGone?: () => void;
+  /** 403 + code: terms_outdated：同意が古い。プロフィールは外さず、未送信のまま同意画面へ送る */
+  onTermsOutdated?: () => void;
 }
 
 export function createSyncEngine(deps: SyncEngineDeps) {
@@ -76,6 +78,11 @@ export function createSyncEngine(deps: SyncEngineDeps) {
       if (e instanceof ApiError) {
         if (e.status === 401) {
           deps.onUnauthorized?.();
+          return;
+        }
+        if (e.status === 403 && e.code === "terms_outdated") {
+          deps.onTermsOutdated?.();
+          markPending(profileId);
           return;
         }
         if (e.status === 403 || e.status === 404) {
@@ -114,6 +121,10 @@ export function createSyncEngine(deps: SyncEngineDeps) {
       if (e instanceof ApiError) {
         if (e.status === 401) {
           deps.onUnauthorized?.();
+          return;
+        }
+        if (e.status === 403 && e.code === "terms_outdated") {
+          deps.onTermsOutdated?.();
           return;
         }
         if (e.status === 403 || e.status === 404) {
