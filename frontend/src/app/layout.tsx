@@ -35,6 +35,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#bfe7f7",
+  // ダブルタップズームの判定待ちをなくし、タップの取りこぼしを減らす
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

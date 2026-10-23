@@ -154,6 +154,12 @@
   html {
     @apply font-sans;
   }
+  /* スマホで、指のわずかな動きをスクロール・ダブルタップズームと誤認してタップが取り消されるのを防ぐ */
+  button,
+  a,
+  [role="button"] {
+    touch-action: manipulation;
+  }
 }
 
 @layer utilities {
