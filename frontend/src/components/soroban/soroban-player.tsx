@@ -18,6 +18,7 @@ import { StageNotFound } from "@/components/play/stage-not-found";
 import { StageResult, type StageOutcome } from "@/components/play/stage-result";
 import { useSpeedPlay } from "@/components/play/use-speed-play";
 import { MitoriSheet } from "@/components/soroban/mitori-sheet";
+import { SorobanAbacus } from "@/components/soroban/soroban-abacus";
 import { SorobanProblemText } from "@/components/soroban/soroban-problem-text";
 import { getStage, stageTargetMs, type SorobanStage } from "@/data/stages/catalog";
 import { createStage, currentProblem, submitAnswer, type StageState } from "@/lib/game/stage";
@@ -142,6 +143,8 @@ export function SorobanPlayer({ stageId }: { stageId: string }) {
         </p>
         <FeedbackText feedback={feedback} />
         <PointsPopup gain={feedback === "correct" ? speed.lastGain : null} />
+        {/* 問題が変わるたび（key=currentIndex）に0へ戻す。採点には使わない、自分で計算するための道具 */}
+        <SorobanAbacus key={state.currentIndex} />
       </Panel>
       <div className="flex w-full justify-center px-4">
         <NumericKeypad
