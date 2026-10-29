@@ -8,9 +8,7 @@ import { cn } from "@/lib/utils";
 /** 珠はひし形（菱形）。clip-pathで六角のレンズ形にし、木目っぽいグラデーションで立体感を出す */
 const BEAD_SHAPE = { clipPath: "polygon(50% 0%, 88% 24%, 88% 76%, 50% 100%, 12% 76%, 12% 24%)" };
 const BEAD =
-  "relative h-5 w-9 border border-amber-950/70 bg-[linear-gradient(155deg,#fde9a8_0%,#eab63a_32%,#c6811d_68%,#7a4a10_100%)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_1px_2px_rgba(0,0,0,0.35)] transition-transform active:scale-95";
-
-const ONE_RANKS = Array.from({ length: ABACUS_ONE_BEADS }, (_, i) => i + 1).reverse();
+  "h-5 w-9 border border-amber-950/70 bg-[linear-gradient(155deg,#fde9a8_0%,#eab63a_32%,#c6811d_68%,#7a4a10_100%)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_1px_2px_rgba(0,0,0,0.35)] transition-transform active:scale-95";
 
 /** 軸（心棒）。枠の上から下まで、珠の後ろに1本通す */
 function Rod() {
@@ -28,42 +26,54 @@ function UpperCell({ five, onToggle }: { five: boolean; onToggle: () => void }) 
     <div className="relative flex flex-1 flex-col items-center">
       <Rod />
       <div className={cn("flex h-8 w-full flex-col items-center", five ? "justify-end" : "justify-start")}>
-        <button type="button" aria-label="ごだま（5）" aria-pressed={five} onClick={onToggle} style={BEAD_SHAPE} className={BEAD} />
+        <button
+          type="button"
+          aria-label="ごだま（5）"
+          aria-pressed={five}
+          onClick={onToggle}
+          style={BEAD_SHAPE}
+          className={cn(BEAD, "relative")}
+        />
       </div>
     </div>
   );
 }
 
-/** いちだま（1×4）の列。はりに近い番号から動く。動いている分は上に集まり、残りは下に残る */
+// いちだま1こぶんの高さ・間隔（px）。枠の高さぶん、はり側⇔いちばん下まではっきり動く距離を作る
+const ONE_BEAD_PX = 20;
+const ONE_GAP_PX = 3;
+const ONE_PITCH_PX = ONE_BEAD_PX + ONE_GAP_PX;
+const LOWER_TRACK_PX = 132;
+
+/** rank（1=はりに近い）の珠が、動いているときの上からの位置 */
+function activeTopPx(rank: number): number {
+  return (rank - 1) * ONE_PITCH_PX;
+}
+
+/** rank の珠が、動いていない（休んでいる）ときの上からの位置。4この珠が枠の下に並ぶ */
+function restTopPx(rank: number): number {
+  return LOWER_TRACK_PX - ONE_BEAD_PX - (ABACUS_ONE_BEADS - rank) * ONE_PITCH_PX;
+}
+
+/** いちだま（1×4）の列。はりに近い番号から動く。珠ごとに場所が決まっていて、はり側⇔枠の下まで1枚ずつスライドする */
 function LowerCell({ ones, onTap }: { ones: number; onTap: (rank: number) => void }) {
   return (
-    <div className="relative flex flex-1 flex-col items-center">
+    <div className="relative flex-1" style={{ height: LOWER_TRACK_PX }}>
       <Rod />
-      <div className="flex h-24 w-full flex-col items-center py-1">
-        {ONE_RANKS.filter((rank) => rank <= ones).map((rank) => (
+      {Array.from({ length: ABACUS_ONE_BEADS }, (_, i) => i + 1).map((rank) => {
+        const active = rank <= ones;
+        return (
           <button
             key={rank}
             type="button"
-            aria-label={`いちだま ${rank}こめ（動かす）`}
-            aria-pressed
+            aria-label={`いちだま ${rank}こめ${active ? "（動いている）" : ""}`}
+            aria-pressed={active}
             onClick={() => onTap(rank)}
-            style={BEAD_SHAPE}
-            className={cn(BEAD, "mt-0.5 first:mt-0")}
+            style={{ ...BEAD_SHAPE, top: active ? activeTopPx(rank) : restTopPx(rank) }}
+            className={cn(BEAD, "absolute left-1/2 -translate-x-1/2 transition-[top] duration-200 ease-out")}
           />
-        ))}
-        <span className="flex-1" />
-        {ONE_RANKS.filter((rank) => rank > ones).map((rank) => (
-          <button
-            key={rank}
-            type="button"
-            aria-label={`いちだま ${rank}こめ`}
-            aria-pressed={false}
-            onClick={() => onTap(rank)}
-            style={BEAD_SHAPE}
-            className={cn(BEAD, "mb-0.5 last:mb-0")}
-          />
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

@@ -143,8 +143,9 @@ export function SorobanPlayer({ stageId }: { stageId: string }) {
         </p>
         <FeedbackText feedback={feedback} />
         <PointsPopup gain={feedback === "correct" ? speed.lastGain : null} />
-        {/* 問題が変わるたび（key=currentIndex）に0へ戻す。採点には使わない、自分で計算するための道具 */}
-        <SorobanAbacus key={state.currentIndex} />
+        {/* 問題が変わるたびに0へ戻す。採点には使わない、自分で計算するための道具。
+            key は同じ Panel 内の珠（key={speed.session.answered}）と重ならないよう接頭辞を付ける */}
+        <SorobanAbacus key={`abacus-${state.currentIndex}`} />
       </Panel>
       <div className="flex w-full justify-center px-4">
         <NumericKeypad
